@@ -1,3 +1,6 @@
+import { logger } from "@deco/deco/o11y";
+import { getCookies } from "std/http/mod.ts";
+import { DEFAULT_EXPECTED_SECTIONS } from "../actions/cart/removeItemAttachment.ts";
 import { AppContext } from "../mod.ts";
 import { proxySetCookie } from "../utils/cookies.ts";
 import {
@@ -6,16 +9,17 @@ import {
   parseCookie,
 } from "../utils/orderForm.ts";
 import {
-  getOrderFormIdFromBag as getCheckoutVtexCookieFromBag,
   getSegmentFromBag,
   setOrderFormIdInBag as setCheckoutVtexCookieInBag,
 } from "../utils/segment.ts";
-import type { MarketingData, OrderForm } from "../utils/types.ts";
-import { DEFAULT_EXPECTED_SECTIONS } from "../actions/cart/removeItemAttachment.ts";
 import { forceHttpsOnAssets } from "../utils/transform.ts";
-import { safelySetCheckoutVtexCookie } from "../utils/orderForm.ts";
-import { getCookies } from "std/http/mod.ts";
-import { logger } from "@deco/deco/o11y";
+import type { MarketingData, OrderForm } from "../utils/types.ts";
+
+interface Props {
+  orderformId?: string;
+  ignoreSetCookie?: boolean;
+  forceNewCart?: boolean;
+}
 
 const safeParseJwt = (cookie: string) => {
   try {
@@ -70,27 +74,29 @@ const logMismatchedCart = (cart: OrderForm, req: Request, ctx: AppContext) => {
 };
 
 export const cache = "no-store";
+
 /**
  * @docs https://developers.vtex.com/docs/api-reference/checkout-api#get-/api/checkout/pub/orderForm
  * @title Get Cart
  * @description Get the cart from the user logged in
  */
 const loader = async (
-  _props: unknown,
+  props: Props,
   req: Request,
   ctx: AppContext,
 ): Promise<OrderForm> => {
   const { vcsDeprecated } = ctx;
-  const { cookie } = parseCookie(req.headers);
+  const { cookie } = parseCookie(req.headers, {
+    overwrite: { orderformId: props.orderformId },
+  });
   const segment = getSegmentFromBag(ctx);
-  const maybeOrderFormId = getCheckoutVtexCookieFromBag(ctx);
-  const orderFormId = maybeOrderFormId ? await maybeOrderFormId : undefined;
-  const withOrderFormIdCookie = orderFormId
-    ? safelySetCheckoutVtexCookie(cookie, orderFormId)
-    : cookie;
+
   const responsePromise = vcsDeprecated["POST /api/checkout/pub/orderForm"](
-    { sc: segment?.payload?.channel },
-    { headers: { cookie: withOrderFormIdCookie } },
+    {
+      sc: segment?.payload?.channel,
+      forceNewCart: props.forceNewCart || false,
+    },
+    { headers: { cookie } },
   );
 
   setCheckoutVtexCookieInBag(
@@ -105,7 +111,11 @@ const loader = async (
   // Temporary logging to check for cart mismatch
   logMismatchedCart(cart, req, ctx);
 
-  proxySetCookie(response.headers, ctx.response.headers, req.url);
+  if (!props.ignoreSetCookie) {
+    proxySetCookie(response.headers, ctx.response.headers, req.url);
+  } else {
+    response.headers.delete("set-cookie");
+  }
 
   if (!segment?.payload) {
     return forceHttpsOnAssets(cart);
@@ -154,7 +164,7 @@ const loader = async (
             headers: {
               accept: "application/json",
               "content-type": "application/json",
-              cookie: withOrderFormIdCookie,
+              cookie,
             },
           },
         );

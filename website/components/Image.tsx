@@ -54,7 +54,7 @@ export type Props =
 
 export const FACTORS = [1, 2];
 
-type FitOptions = "contain" | "cover";
+export type FitOptions = "contain" | "cover";
 
 // Default is false
 const bypassDecoImageOptimization = () =>

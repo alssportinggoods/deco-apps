@@ -260,12 +260,16 @@ export const setSegmentBag = (
     });
   }
 
+  const hostname = (new URL(req.url)).hostname;
+  const cookieDomain = hostname.startsWith(".") ? hostname : `.${hostname}`;
+
   // Only set vtex_segment when the channel is non-default so that default-SC
   // responses remain cacheable by the CDN without a Set-Cookie header.
   if (vtex_segment !== token && !isAnonymous(ctx)) {
     setCookie(ctx.response.headers, {
       value: token,
       name: SEGMENT_COOKIE_NAME,
+      domain: hostname === "localhost" ? "localhost" : cookieDomain,
       path: "/",
       secure: true,
       httpOnly: true,

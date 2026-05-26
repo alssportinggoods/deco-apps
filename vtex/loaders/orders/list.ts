@@ -16,10 +16,14 @@ export default async function loader(
   props: Props,
   req: Request,
   ctx: AppContext,
-): Promise<Userorderslist> {
+): Promise<Userorderslist | null> {
   const { vcsDeprecated } = ctx;
   const { clientEmail, page = "0", per_page = "15" } = props;
-  const { cookie } = parseCookie(req.headers, ctx.account);
+  const { cookie, payload } = parseCookie(req.headers, ctx.account);
+
+  if (!payload?.sub || !payload?.userId) {
+    return null;
+  }
 
   const ordersResponse = await vcsDeprecated
     ["GET /api/oms/user/orders"](
@@ -27,6 +31,7 @@ export default async function loader(
         clientEmail,
         page,
         per_page,
+        includeProfileLastPurchases: true,
       },
       {
         headers: {

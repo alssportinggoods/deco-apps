@@ -1,35 +1,20 @@
+import { type App, type FnContext } from "@deco/deco";
 import { Markdown } from "../decohub/components/Markdown.tsx";
 import { PreviewContainer } from "../utils/preview.tsx";
 import manifest, { Manifest } from "./manifest.gen.ts";
-import { type App, type FnContext } from "@deco/deco";
-export type AppContext = FnContext<Props, Manifest>;
-export type Extension =
-  | "ajax-header"
-  | "alpine-morph"
-  | "class-tools"
-  | "client-side-templates"
-  | "debug"
-  | "event-header"
-  | "head-support"
-  | "include-vals"
-  | "json-enc"
-  | "idiomorph"
-  | "loading-states"
-  | "method-override"
-  | "morphdom-swap"
-  | "multi-swap"
-  | "path-deps"
-  | "preload"
-  | "remove-me"
-  | "response-targets"
-  | "restored"
-  | "ws"
-  | "path-params"
-  | "sse";
+
+/**
+ * @title {{{name}}}
+ */
+export interface Extension {
+  name: string;
+  url: string;
+}
+
 export interface Props {
-  /** @default 1.9.11 */
+  /** @default 1.9.12 */
   version?: string;
-  /** @defaul https://cdn.jsdelivr.net/npm  */
+  /** @default https://cdn.jsdelivr.net/npm  */
   cdn?: string;
   /** @title HTMX extensions to include */
   extensions?: Extension[];
@@ -50,6 +35,7 @@ export default function Site(state: Props): App<Manifest, Required<Props>> {
     manifest,
   };
 }
+
 export const preview = async () => {
   const markdownContent = await Markdown(
     new URL("./README.md", import.meta.url).href,
@@ -71,3 +57,4 @@ export const preview = async () => {
     },
   };
 };
+export type AppContext = FnContext<Props, Manifest>;

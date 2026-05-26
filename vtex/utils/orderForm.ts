@@ -4,6 +4,12 @@ import { MarketingData } from "./types.ts";
 
 const VTEX_CHECKOUT_COOKIE = "checkout.vtex.com";
 
+interface ParseCookieOptions {
+  overwrite?: {
+    orderformId?: string;
+  };
+}
+
 export const getCheckoutVtexCookie = (headers: Headers) => {
   const cookies = getSetCookies(headers);
   return cookies.find((cookie) => cookie.name === VTEX_CHECKOUT_COOKIE)?.value;
@@ -19,9 +25,11 @@ export const safelySetCheckoutVtexCookie = (
   return `${cookieString}; ${VTEX_CHECKOUT_COOKIE}=${orderFormId}`;
 };
 
-export const parseCookie = (headers: Headers) => {
+export const parseCookie = (headers: Headers, options?: ParseCookieOptions) => {
   const cookies = getCookies(headers);
-  const ofidCookie = cookies[VTEX_CHECKOUT_COOKIE];
+  const ofidCookie = options?.overwrite?.orderformId
+    ? `__ofid=${options.overwrite.orderformId}`
+    : cookies[VTEX_CHECKOUT_COOKIE];
 
   /**
    * There are two cookies present for VTEX Auth:

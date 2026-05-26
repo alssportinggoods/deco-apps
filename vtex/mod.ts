@@ -1,20 +1,3 @@
-import { createGraphqlClient } from "../utils/graphql.ts";
-import { createHttpClient } from "../utils/http.ts";
-import workflow from "../workflows/mod.ts";
-import manifest, { Manifest } from "./manifest.gen.ts";
-import { middleware } from "./middleware.ts";
-import { SP, VTEXCommerceStable } from "./utils/client.ts";
-import { fetchSafe } from "./utils/fetchVTEX.ts";
-import { OpenAPI as VCS } from "./utils/openapi/vcs.openapi.gen.ts";
-import { OpenAPI as API } from "./utils/openapi/api.openapi.gen.ts";
-import { OpenAPI as MY } from "./utils/openapi/my.openapi.gen.ts";
-import { OpenAPI as VPAY } from "./utils/openapi/payments.openapi.gen.ts";
-import { OpenAPI as SUB } from "./utils/openapi/subscriptions.openapi.gen.ts";
-import { Segment } from "./utils/types.ts";
-import type { Secret } from "../website/loaders/secret.ts";
-import { removeDirtyCookies } from "../utils/normalize.ts";
-import { Markdown } from "../decohub/components/Markdown.tsx";
-import { PreviewVtex } from "./preview/Preview.tsx";
 import {
   type App as A,
   type AppContext as AC,
@@ -23,6 +6,25 @@ import {
   type ManifestOf,
 } from "@deco/deco";
 import { Suggestion } from "../commerce/types.ts";
+import { Markdown } from "../decohub/components/Markdown.tsx";
+import { createGraphqlClient } from "../utils/graphql.ts";
+import { createHttpClient } from "../utils/http.ts";
+import { removeDirtyCookies } from "../utils/normalize.ts";
+import type { Secret } from "../website/loaders/secret.ts";
+import workflow from "../workflows/mod.ts";
+import manifest, { Manifest } from "./manifest.gen.ts";
+import { middleware } from "./middleware.ts";
+import { PreviewVtex } from "./preview/Preview.tsx";
+import { SP, VTEXCommerceStable } from "./utils/client.ts";
+import { fetchSafe } from "./utils/fetchVTEX.ts";
+import { OpenAPI as API } from "./utils/openapi/api.openapi.gen.ts";
+import { OpenAPI as MY } from "./utils/openapi/my.openapi.gen.ts";
+import { OpenAPI as VPAY } from "./utils/openapi/payments.openapi.gen.ts";
+import { OpenAPI as SUB } from "./utils/openapi/subscriptions.openapi.gen.ts";
+import { SimulationBehavior, VCS } from "./utils/types.ts";
+
+import { Segment } from "./utils/types.ts";
+
 export type App = ReturnType<typeof VTEX>;
 export type AppContext = AC<App>;
 export type AppManifest = ManifestOf<App>;
@@ -39,6 +41,7 @@ export type SegmentCulture = Omit<
   | "priceTables"
   | "regionId"
 >;
+
 /** @title VTEX */
 export interface Props {
   /**
@@ -84,7 +87,6 @@ export interface Props {
    * @hide true
    */
   platform: "vtex";
-
   advancedConfigs?: {
     doNotFetchVariantsForRelatedProducts?: boolean;
     /**
@@ -92,6 +94,12 @@ export interface Props {
      * @description Remove UTM from cache key to prevent cache fragmentation.
      */
     removeUTMFromCacheKey?: boolean;
+    /**
+     * @title Simulation Behavior
+     * @description Defines the default simulation behavior value.
+     * @default default
+     */
+    simulationBehavior?: SimulationBehavior;
   };
 
   /**
@@ -166,6 +174,12 @@ export default function VTEX(
     processHeaders: removeDirtyCookies,
     headers: headers,
   });
+  const secure = createHttpClient<VTEXCommerceStable>({
+    base: publicUrl.startsWith("http") ? publicUrl : `https://${publicUrl}`,
+    fetcher: fetchSafe,
+    processHeaders: removeDirtyCookies,
+    headers: headers,
+  });
   const api = createHttpClient<API>({
     base: `https://api.vtex.com/${account}`,
     fetcher: fetchSafe,
@@ -203,6 +217,7 @@ export default function VTEX(
     vcs,
     my,
     api,
+    secure,
     vpay,
     sub,
     cachedSearchTerms,

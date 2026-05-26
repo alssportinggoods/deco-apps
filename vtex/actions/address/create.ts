@@ -134,6 +134,7 @@ async function action(
 
   return toPostalAddress({
     ...savedAddress,
+    addressType: savedAddress.addressType || "",
     addressId: savedAddress.id || "",
     complement: savedAddress.complement || null,
     receiverName: savedAddress.receiverName || null,

@@ -3,15 +3,16 @@ import { type createHttpClient } from "../../utils/http.ts";
 import { type AppContext } from "../mod.ts";
 import { type SP } from "../utils/client.ts";
 import { type OpenAPI as API } from "../utils/openapi/api.openapi.gen.ts";
-import { type OpenAPI as VCS } from "../utils/openapi/vcs.openapi.gen.ts";
 import { type OpenAPI as MY } from "../utils/openapi/my.openapi.gen.ts";
 import { type OpenAPI as VPAY } from "../utils/openapi/payments.openapi.gen.ts";
 import { type OpenAPI as SUB } from "../utils/openapi/subscriptions.openapi.gen.ts";
+import { type VCS } from "../utils/types.ts";
 
 export type Config = {
   sp: ReturnType<typeof createHttpClient<SP>>;
   io: ReturnType<typeof createGraphqlClient>;
   vcs: ReturnType<typeof createHttpClient<VCS>>;
+  vcsDeprecated: ReturnType<typeof createHttpClient<VCS>>;
   my: ReturnType<typeof createHttpClient<MY>>;
   api: ReturnType<typeof createHttpClient<API>>;
   vpay: ReturnType<typeof createHttpClient<VPAY>>;
@@ -30,6 +31,9 @@ const loader = (_props: unknown, _req: Request, ctx: AppContext): Config => ({
   api: ctx.api,
   vpay: ctx.vpay,
   sub: ctx.sub,
+  vcsDeprecated: ctx.vcsDeprecated as unknown as typeof ctx.vcs,
 });
 
 export default loader;
+
+export const cache = "no-cache";

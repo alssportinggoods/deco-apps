@@ -101,6 +101,8 @@ import * as $$$49 from "./loaders/user.ts";
 import * as $$$50 from "./loaders/wishlist.ts";
 import * as $$$51 from "./loaders/workflow/product.ts";
 import * as $$$52 from "./loaders/workflow/products.ts";
+import * as $$$$$$$0 from "./matchers/birthday.ts";
+import * as $$$$$$$1 from "./matchers/userSegment.ts";
 import * as $$$$$$0 from "./sections/Analytics/Vtex.tsx";
 import * as $$$$$$$$$$0 from "./workflows/events.ts";
 import * as $$$$$$$$$$1 from "./workflows/product/index.ts";
@@ -166,6 +168,10 @@ const manifest = {
   },
   "sections": {
     "vtex/sections/Analytics/Vtex.tsx": $$$$$$0,
+  },
+  "matchers": {
+    "vtex/matchers/birthday.ts": $$$$$$$0,
+    "vtex/matchers/userSegment.ts": $$$$$$$1,
   },
   "actions": {
     "vtex/actions/address/create.ts": $$$$$$$$$0,

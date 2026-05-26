@@ -2,6 +2,11 @@ import { Person } from "../../commerce/types.ts";
 import { AppContext } from "../mod.ts";
 import { parseCookie } from "../utils/vtexId.ts";
 
+interface ProfileCustomField {
+  key: string;
+  value: string;
+}
+
 interface User {
   id: string;
   userId: string;
@@ -14,6 +19,7 @@ interface User {
   homePhone?: string;
   businessPhone?: string;
   birthDate?: string;
+  customFields?: ProfileCustomField[];
 }
 
 /**
@@ -33,7 +39,7 @@ async function loader(
   }
 
   const query =
-    "query getUserProfile { profile { id userId email firstName lastName profilePicture gender document homePhone businessPhone birthDate }}";
+    "query getUserProfile { profile { id userId email firstName lastName profilePicture gender birthDate document homePhone businessPhone customFields { key value } }}";
 
   try {
     const { profile: user } = await io.query<{ profile: User }, null>(
@@ -47,11 +53,27 @@ async function loader(
       givenName: user?.firstName,
       familyName: user?.lastName,
       taxID: user?.document?.replace(/[^\d]/g, ""),
-      gender: user?.gender === "female"
-        ? "https://schema.org/Female"
-        : "https://schema.org/Male",
-      telephone: user?.homePhone ?? user?.businessPhone,
+      gender: user.gender
+        ? user.gender === "f" || user.gender === "female"
+          ? "https://schema.org/Female"
+          : "https://schema.org/Male"
+        : undefined,
+      telephone: user.homePhone ?? user.businessPhone,
       birthDate: user?.birthDate,
+      additionalProperty: [
+        ...(user.birthDate
+          ? [{
+            "@type": "PropertyValue" as const,
+            name: "birthDate",
+            value: user.birthDate,
+          }]
+          : []),
+        ...(user.customFields?.map((field) => ({
+          "@type": "PropertyValue" as const,
+          name: field.key,
+          value: field.value,
+        })) ?? []),
+      ],
     };
   } catch (_) {
     return null;

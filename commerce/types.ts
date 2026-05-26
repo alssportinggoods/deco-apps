@@ -415,6 +415,8 @@ export interface Person extends Omit<Thing, "@type"> {
   telephone?: string;
   /** The birth date of the person. */
   birthDate?: string;
+  /** A property-value pair representing an additional characteristic of the entity. */
+  additionalProperty?: PropertyValue[];
 }
 
 // NON SCHEMA.ORG Compliant. Should be removed ASAP

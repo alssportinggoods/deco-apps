@@ -44,9 +44,10 @@ import * as $$$$$$$$$38 from "./actions/review/submit.ts";
 import * as $$$$$$$$$39 from "./actions/session/createSession.ts";
 import * as $$$$$$$$$40 from "./actions/session/deleteSession.ts";
 import * as $$$$$$$$$41 from "./actions/session/editSession.ts";
-import * as $$$$$$$$$42 from "./actions/trigger.ts";
-import * as $$$$$$$$$43 from "./actions/wishlist/addItem.ts";
-import * as $$$$$$$$$44 from "./actions/wishlist/removeItem.ts";
+import * as $$$$$$$$$42 from "./actions/session/validateSession.ts";
+import * as $$$$$$$$$43 from "./actions/trigger.ts";
+import * as $$$$$$$$$44 from "./actions/wishlist/addItem.ts";
+import * as $$$$$$$$$45 from "./actions/wishlist/removeItem.ts";
 import * as $$$$0 from "./handlers/sitemap.ts";
 import * as $$$0 from "./loaders/address/getAddressByPostalCode.ts";
 import * as $$$1 from "./loaders/address/getUserAddresses.ts";
@@ -216,9 +217,10 @@ const manifest = {
     "vtex/actions/session/createSession.ts": $$$$$$$$$39,
     "vtex/actions/session/deleteSession.ts": $$$$$$$$$40,
     "vtex/actions/session/editSession.ts": $$$$$$$$$41,
-    "vtex/actions/trigger.ts": $$$$$$$$$42,
-    "vtex/actions/wishlist/addItem.ts": $$$$$$$$$43,
-    "vtex/actions/wishlist/removeItem.ts": $$$$$$$$$44,
+    "vtex/actions/session/validateSession.ts": $$$$$$$$$42,
+    "vtex/actions/trigger.ts": $$$$$$$$$43,
+    "vtex/actions/wishlist/addItem.ts": $$$$$$$$$44,
+    "vtex/actions/wishlist/removeItem.ts": $$$$$$$$$45,
   },
   "workflows": {
     "vtex/workflows/events.ts": $$$$$$$$$$0,

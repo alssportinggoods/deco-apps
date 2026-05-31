@@ -52,9 +52,13 @@ export interface VTEXCommerceStable {
     body: URLSearchParams;
     response: AuthResponse;
   };
+  "POST /api/vtexid/pub/authentication/startlogin": {
+    body: FormData;
+    response: unknown;
+  };
   "POST /api/vtexid/pub/authentication/classic/setpassword": {
-    searchParams: { scope?: string; locale?: string };
-    body: URLSearchParams;
+    searchParams: { scope?: string; locale?: string; expireSessions?: boolean };
+    body: URLSearchParams | FormData;
     response: AuthResponse;
   };
   "POST /api/vtexid/pub/authentication/accesskey/send": {

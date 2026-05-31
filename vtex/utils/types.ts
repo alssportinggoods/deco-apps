@@ -1867,6 +1867,16 @@ export interface Session {
   };
 }
 
+export interface SessionProps {
+  publicProperties: Record<string, { value: string }>;
+  /**
+   * Items are the keys of the values you wish to get. They follow the format namespace1.key1,namespace2.key2.
+   *
+   * If you wish to recover the data sent on Create new session, it should be public.{key}, replacing {key} with the name of the custom property you created. Following the example request presented in Create new session, it would be public.variable1,public.variable2.
+   */
+  items: string[];
+}
+
 export interface SessionProfile {
   id?: { value: string };
   email?: { value: string };

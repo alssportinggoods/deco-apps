@@ -33,3 +33,5 @@ export default async function loader(
 
   return order;
 }
+
+export const cache = "no-store";

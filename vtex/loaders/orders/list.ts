@@ -44,3 +44,5 @@ export default async function loader(
 
   return ordersList;
 }
+
+export const cache = "no-store";

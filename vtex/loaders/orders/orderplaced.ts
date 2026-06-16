@@ -53,7 +53,6 @@ export default async function loader(
 ) {
   const { vcsDeprecated } = ctx;
   const cookie = resolveOrderCookie(req.headers);
-
   const isOrderGroup = !orderId.includes("-");
 
   if (isOrderGroup) {
@@ -75,3 +74,5 @@ export default async function loader(
 
   return [order];
 }
+
+export const cache = "no-store";

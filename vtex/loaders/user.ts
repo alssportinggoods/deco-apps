@@ -81,3 +81,5 @@ async function loader(
 }
 
 export default loader;
+
+export const cache = "no-store";

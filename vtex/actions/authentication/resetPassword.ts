@@ -2,7 +2,6 @@ import { getSetCookies, setCookie } from "std/http/cookie.ts";
 import { AppContext } from "../../mod.ts";
 import { proxySetCookie, REFRESH_TOKEN_COOKIE } from "../../utils/cookies.ts";
 import { AuthResponse } from "../../utils/types.ts";
-import { getCookies } from "@std/http/cookie";
 
 export interface Props {
   email: string;

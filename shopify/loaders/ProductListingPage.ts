@@ -7,7 +7,9 @@ import {
 } from "../utils/storefront/queries.ts";
 import {
   CollectionProductsArgs,
+  CountryCode,
   HasMetafieldsMetafieldsArgs,
+  LanguageCode,
   ProductConnection,
   ProductFragment,
   QueryRoot,
@@ -16,7 +18,7 @@ import {
   SearchResultItemConnection,
 } from "../utils/storefront/storefront.graphql.gen.ts";
 import { toFilter, toProduct } from "../utils/transform.ts";
-import { Metafield } from "../utils/types.ts";
+import { LanguageContextArgs, Metafield } from "../utils/types.ts";
 import {
   getFiltersByUrl,
   searchSortOptions,
@@ -70,6 +72,18 @@ export interface Props {
    * @description The URL of the page, used to override URL from request
    */
   pageHref?: string;
+  /**
+   * @title Language Code
+   * @description Language code for the storefront API
+   * @example "EN" for English, "FR" for French, etc.
+   */
+  languageCode?: LanguageCode;
+  /**
+   * @title Country Code
+   * @description Country code for the storefront API
+   * @example "US" for United States, "FR" for France, etc.
+   */
+  countryCode?: CountryCode;
 }
 
 /**
@@ -95,6 +109,8 @@ const loader = async (
   const startCursor = props.startCursor ||
     url.searchParams.get("startCursor") || "";
   const metafields = props.metafields || [];
+  const languageCode = props?.languageCode || "PT";
+  const countryCode = props?.countryCode || "BR";
 
   const isSearch = Boolean(query);
   let hasNextPage = false;
@@ -106,6 +122,7 @@ const loader = async (
     | undefined = undefined;
   let shopifyFilters = undefined;
   let records = undefined;
+  let collectionId = undefined;
   let collectionTitle = undefined;
   let collectionDescription = undefined;
 
@@ -114,7 +131,7 @@ const loader = async (
   if (isSearch) {
     const data = await storefront.query<
       QueryRoot,
-      QueryRootSearchArgs & HasMetafieldsMetafieldsArgs
+      QueryRootSearchArgs & HasMetafieldsMetafieldsArgs & LanguageContextArgs
     >({
       variables: {
         ...(!endCursor && { first: count }),
@@ -124,7 +141,9 @@ const loader = async (
         query: query,
         productFilters: getFiltersByUrl(url),
         identifiers: metafields,
-        ...searchSortShopify[sort],
+        languageCode,
+        countryCode,
+        ...(searchSortShopify[sort] || {}),
       },
       ...SearchProducts,
     });
@@ -137,15 +156,17 @@ const loader = async (
       data?.search?.pageInfo.hasPreviousPage ?? false,
     );
   } else {
-    // TODO: understand how accept more than one path
-    // example: /collections/first-collection/second-collection
-    const pathname = props.collectionName || url.pathname.split("/")[1];
+    // Support for multiple paths, such as /{lang}/collections/first-collection/second-collection
+    // Always takes the last non-empty segment as pathname
+    const pathname = props.collectionName ||
+      url.pathname.split("/").filter(Boolean).pop();
 
     const data = await storefront.query<
       QueryRoot,
       & QueryRootCollectionArgs
       & CollectionProductsArgs
       & HasMetafieldsMetafieldsArgs
+      & LanguageContextArgs
     >({
       variables: {
         ...(!endCursor && { first: count }),
@@ -155,7 +176,9 @@ const loader = async (
         identifiers: metafields,
         handle: pathname,
         filters: getFiltersByUrl(url),
-        ...sortShopify[sort],
+        languageCode,
+        countryCode,
+        ...(sortShopify[sort] || {}),
       },
       ...ProductsByCollection,
     });
@@ -168,6 +191,7 @@ const loader = async (
     hasPreviousPage = Boolean(
       data?.collection?.products.pageInfo.hasPreviousPage ?? false,
     );
+    collectionId = data.collection?.id;
     collectionTitle = data.collection?.title;
     collectionDescription = data.collection?.description;
   }
@@ -208,9 +232,10 @@ const loader = async (
     // TODO: Update breadcrumb when accept more than one path
     breadcrumb: {
       "@type": "BreadcrumbList",
+      "@id": collectionId,
       itemListElement: [{
         "@type": "ListItem" as const,
-        name: isSearch ? query : url.pathname.split("/")[1],
+        name: isSearch ? query : url.pathname.split("/").filter(Boolean).pop(),
         item: isSearch ? url.href : url.pathname,
         position: 2,
       }],
@@ -236,7 +261,7 @@ const loader = async (
   };
 };
 
-export const cache = "no-cache";
+export const cache = "stale-while-revalidate";
 export const cacheKey = (props: Props, req: Request): string | null => {
   const url = new URL(props.pageHref || req.url);
 
@@ -250,6 +275,7 @@ export const cacheKey = (props: Props, req: Request): string | null => {
   const startCursor = props.startCursor ||
     url.searchParams.get("startCursor") || "";
   const sort = url.searchParams.get("sort") ?? "";
+
   const searchParams = new URLSearchParams({
     count,
     query,
@@ -258,6 +284,32 @@ export const cacheKey = (props: Props, req: Request): string | null => {
     startCursor,
     sort,
   });
+
+  // Add metafields to cache key if they exist
+  if (props.metafields?.length) {
+    const metafieldsKey = props.metafields
+      .map((m) => `${m.namespace}.${m.key}`)
+      .sort()
+      .join(",");
+    searchParams.append("metafields", metafieldsKey);
+  }
+
+  // Add language and country codes
+  const languageCode = props?.languageCode || "PT";
+  const countryCode = props?.countryCode || "BR";
+  searchParams.append("languageCode", languageCode);
+  searchParams.append("countryCode", countryCode);
+
+  // Add collection name if specified
+  if (props.collectionName) {
+    searchParams.append("collectionName", props.collectionName);
+  }
+
+  // Add page offset if different from default
+  const pageOffset = props.pageOffset ?? 1;
+  if (pageOffset !== 1) {
+    searchParams.append("pageOffset", pageOffset.toString());
+  }
 
   url.searchParams.forEach((value, key) => {
     if (!key.startsWith("filter.")) return;

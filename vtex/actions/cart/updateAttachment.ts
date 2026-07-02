@@ -10,6 +10,7 @@ export interface Props {
   expectedOrderFormSections?: string[];
   // deno-lint-ignore no-explicit-any
   body: any;
+  orderFormId?: string;
 }
 
 /**
@@ -26,8 +27,13 @@ const action = async (
     attachment,
     body,
     expectedOrderFormSections = DEFAULT_EXPECTED_SECTIONS,
+    orderFormId: overrideOrderFormId,
   } = props;
-  const { orderFormId } = parseCookie(req.headers);
+  const { orderFormId } = parseCookie(req.headers, {
+    overwrite: overrideOrderFormId
+      ? { orderformId: overrideOrderFormId }
+      : undefined,
+  });
 
   if (!orderFormId || orderFormId === "") {
     throw new Error("Order form ID is required");

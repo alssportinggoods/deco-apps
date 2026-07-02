@@ -1,7 +1,7 @@
 import { Head } from "$fresh/runtime.ts";
-import type { ImageWidget } from "../../admin/widgets.ts";
-import { stripHTML } from "../utils/html.ts";
 import { JSX } from "preact";
+import type { ImageWidget } from "../../admin/widgets.ts";
+import { safeJsonSerialize, stripHTML } from "../utils/html.ts";
 
 export const renderTemplateString = (template: string, value: string) =>
   template.replace("%s", value);
@@ -96,31 +96,31 @@ function Component({
 
   return (
     <Head>
-      <title>{renderTemplateString(titleTemplate, title)}</title>
-      <meta
-        name="description"
-        content={renderTemplateString(descriptionTemplate, description)}
-      />
-      <meta name="theme-color" content={themeColor} />
-      <link rel="icon" href={favicon} />
+      {title && <title>{renderTemplateString(titleTemplate, title)}</title>}
+      {description && (
+        <meta
+          name="description"
+          content={renderTemplateString(descriptionTemplate, description)}
+        />
+      )}
+      {themeColor && <meta name="theme-color" content={themeColor} />}
+      {favicon && <link rel="icon" href={favicon} />}
 
       {/* Twitter tags */}
-      <meta property="twitter:title" content={twitterTitle} />
-      <meta
-        property="twitter:description"
-        content={twitterDescription}
-      />
-      <meta property="twitter:image" content={twitterImage} />
-      <meta property="twitter:card" content={twitterCard} />
+      {twitterTitle && <meta property="twitter:title" content={twitterTitle} />}
+      {twitterDescription && (
+        <meta property="twitter:description" content={twitterDescription} />
+      )}
+      {twitterImage && <meta property="twitter:image" content={twitterImage} />}
+      {twitterCard && <meta property="twitter:card" content={twitterCard} />}
 
       {/* OpenGraph tags */}
-      <meta property="og:title" content={openGraphTitle} />
-      <meta
-        property="og:description"
-        content={openGraphDescription}
-      />
-      <meta property="og:type" content={type} />
-      <meta property="og:image" content={openGraphImage} />
+      {openGraphTitle && <meta property="og:title" content={openGraphTitle} />}
+      {openGraphDescription && (
+        <meta property="og:description" content={openGraphDescription} />
+      )}
+      {type && <meta property="og:type" content={type} />}
+      {openGraphImage && <meta property="og:image" content={openGraphImage} />}
       {Boolean(openGraphConfig?.url || canonical) && (
         <meta property="og:url" content={openGraphConfig?.url ?? canonical} />
       )}
@@ -136,11 +136,11 @@ function Component({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: safeJsonSerialize({
               "@context": "https://schema.org",
               // @ts-expect-error Trust me, I'm an engineer
               ...json,
-            }),
+            }, { returnAsString: true }),
           }}
         />
       ))}

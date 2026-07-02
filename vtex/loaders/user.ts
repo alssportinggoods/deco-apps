@@ -48,17 +48,18 @@ async function loader(
     );
 
     return {
-      "@id": user.userId ?? user.id,
+      "@id": user?.userId ?? user.id,
       email: user.email,
-      givenName: user.firstName,
-      familyName: user.lastName,
+      givenName: user?.firstName,
+      familyName: user?.lastName,
       taxID: user?.document?.replace(/[^\d]/g, ""),
       gender: user.gender
-        ? user.gender === "f"
+        ? user.gender === "f" || user.gender === "female"
           ? "https://schema.org/Female"
           : "https://schema.org/Male"
         : undefined,
       telephone: user.homePhone ?? user.businessPhone,
+      birthDate: user?.birthDate,
       additionalProperty: [
         ...(user.birthDate
           ? [{

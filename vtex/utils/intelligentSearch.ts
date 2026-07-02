@@ -50,6 +50,8 @@ interface Params {
   locale: string;
   hideUnavailableItems: boolean;
   simulationBehavior: SimulationBehavior;
+  zipCode?: string;
+  pickupPoint?: string;
 }
 
 export const withDefaultParams = ({
@@ -61,6 +63,8 @@ export const withDefaultParams = ({
   locale = "pt-BR",
   hideUnavailableItems,
   simulationBehavior = "default",
+  zipCode,
+  pickupPoint,
 }: Partial<Params>) => ({
   page: page + 1,
   count,
@@ -71,6 +75,8 @@ export const withDefaultParams = ({
   // locale: locale ?? ctx.configVTEX!.defaultLocale,
   hideUnavailableItems: hideUnavailableItems ?? false,
   simulationBehavior,
+  "zip-code": zipCode,
+  pickupPoint,
 });
 
 const IS_ANONYMOUS = Symbol("segment");
@@ -120,12 +126,13 @@ export const setISCookiesBag = (
 export const isFilterParam = (keyFilter: string): boolean =>
   keyFilter.startsWith("filter.");
 
-const segmentsFromTerm = (term: string) => term.split("/").filter(Boolean);
+const segmentsFromPath = (url: string) =>
+  new URL(url, "http://localhost").pathname.split("/").filter(Boolean);
 
 const segmentsFromSearchParams = (url: string) => {
   const searchParams = new URLSearchParams(url).entries();
 
-  const categories = Array.from(searchParams).toSorted()
+  const filters = Array.from(searchParams).toSorted()
     .reduce((acc, [key, value]) => {
       if (key.includes("filter.category")) {
         acc.push(value);
@@ -134,14 +141,39 @@ const segmentsFromSearchParams = (url: string) => {
       return acc;
     }, [] as string[]);
 
-  return categories.length ? categories : segmentsFromTerm(url);
+  return filters;
+};
+
+const segmentsFromUrl = (url: string): string[] => {
+  const fromPath = segmentsFromPath(url).map((p) => p.toLowerCase());
+  const fromSearchParams = segmentsFromSearchParams(url).map((s) =>
+    s.toLowerCase()
+  );
+
+  if (!fromSearchParams.length) {
+    return fromPath;
+  }
+
+  if (!fromPath.length) {
+    return fromSearchParams;
+  }
+
+  const segments = [...fromPath];
+
+  for (const segment of fromSearchParams) {
+    if (!segments.includes(segment)) {
+      segments.push(segment);
+    }
+  }
+
+  return segments;
 };
 
 export const pageTypesFromUrl = async (
   url: string,
   ctx: AppContext,
 ) => {
-  const segments = segmentsFromSearchParams(url);
+  const segments = segmentsFromUrl(url);
   const { vcsDeprecated } = ctx;
 
   return await Promise.all(

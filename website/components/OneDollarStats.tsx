@@ -44,7 +44,7 @@ const oneDollarSnippet = () => {
   // 2000 bytes limit
   const truncate = (str: string) => `${str}`.slice(0, 990);
 
-  globalThis.window.DECO.events.subscribe((event) => {
+  globalThis?.window?.DECO?.events?.subscribe((event) => {
     if (!event || event.name !== "deco") {
       return;
     }
@@ -60,7 +60,7 @@ const oneDollarSnippet = () => {
     trackPageview();
   })();
 
-  globalThis.window.DECO.events.subscribe((event) => {
+  globalThis?.window?.DECO?.events?.subscribe((event) => {
     if (!event) {
       return;
     }

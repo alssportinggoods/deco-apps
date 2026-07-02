@@ -11,6 +11,8 @@ export interface Props {
   categoryLevels?: number;
 }
 
+export type CategoryTree = Category | Category[];
+
 /**
  * @title Get Category Tree
  * @description Get the category tree
@@ -19,7 +21,7 @@ export default async function loader(
   { categoryLevels }: Props,
   _req: Request,
   ctx: AppContext,
-): Promise<Category | Category[]> {
+): Promise<CategoryTree> {
   return await ctx.vcsDeprecated
     ["GET /api/catalog_system/pub/category/tree/:level"]({
       level: categoryLevels ?? 1,

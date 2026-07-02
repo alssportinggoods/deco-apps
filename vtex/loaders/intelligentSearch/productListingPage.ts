@@ -1,10 +1,14 @@
+import { redirect } from "@deco/deco";
+import { SpanStatusCode } from "npm:@opentelemetry/api@1.9.0";
 import type { ProductListingPage } from "../../../commerce/types.ts";
 import { parseRange } from "../../../commerce/utils/filters.ts";
 import { STALE } from "../../../utils/fetch.ts";
+import { safeJsonSerialize } from "../../../website/utils/html.ts";
 import sendEvent from "../../actions/analytics/sendEvent.ts";
 import { AppContext } from "../../mod.ts";
 import {
   isFilterParam,
+  pageTypesFromUrl,
   toPath,
   withDefaultFacets,
   withDefaultParams,
@@ -19,7 +23,6 @@ import {
   getSegmentFromBag,
   withSegmentCookie,
 } from "../../utils/segment.ts";
-import { pageTypesFromUrl } from "../../utils/intelligentSearch.ts";
 import { withIsSimilarTo } from "../../utils/similars.ts";
 import { slugify } from "../../utils/slugify.ts";
 import {
@@ -41,7 +44,7 @@ import type {
 } from "../../utils/types.ts";
 import { getFirstItemAvailable } from "../legacy/productListingPage.ts";
 import PLPDefaultPath from "../paths/PLPDefaultPath.ts";
-import { redirect } from "@deco/deco";
+
 /** this type is more friendly user to fuzzy type that is 0, 1 or auto. */
 export type LabelledFuzzy = "automatic" | "disabled" | "enabled";
 /**
@@ -68,6 +71,7 @@ const LEGACY_TO_IS: Record<string, Sort> = {
   OrderByReleaseDateDESC: "release:desc",
   OrderByBestDiscountDESC: "discount:desc",
 };
+
 export const mapLabelledFuzzyToFuzzy = (
   labelledFuzzy?: LabelledFuzzy,
 ): Fuzzy | undefined => {
@@ -159,10 +163,15 @@ export interface Props {
    */
   simulationBehavior?: SimulationBehavior;
 }
+
 const searchArgsOf = (props: Props, url: URL) => {
-  const hideUnavailableItems = props.hideUnavailableItems;
-  const simulationBehavior =
-    url.searchParams.get("simulationBehavior") as SimulationBehavior ||
+  const hideUnavailableItems = url.searchParams.has("hideUnavailableItems")
+    ? url.searchParams.get("hideUnavailableItems") === "true"
+    : props.hideUnavailableItems;
+  const simulationBehavior = (url.searchParams.get("simulationBehavior") as
+    | "skip"
+    | "default"
+    | "only1P") ||
     props.simulationBehavior || "default";
   const countFromSearchParams = url.searchParams.get("PS");
   const count = Number(countFromSearchParams ?? props.count ?? 12);
@@ -187,6 +196,8 @@ const searchArgsOf = (props: Props, url: URL) => {
   );
   const fuzzy = mapLabelledFuzzyToFuzzy(props.fuzzy) ??
     (url.searchParams.get("fuzzy") as Fuzzy);
+  const zipCode = url.searchParams.get("zipcode") ?? undefined;
+  const pickupPoint = url.searchParams.get("pickupPoint") ?? undefined;
   return {
     query,
     fuzzy,
@@ -196,6 +207,8 @@ const searchArgsOf = (props: Props, url: URL) => {
     hideUnavailableItems,
     selectedFacets,
     simulationBehavior,
+    zipCode,
+    pickupPoint,
   };
 };
 const PAGE_TYPE_TO_MAP_PARAM = {
@@ -275,165 +288,243 @@ const loader = async (
   req: Request,
   ctx: AppContext,
 ): Promise<ProductListingPage | null> => {
-  const { vcsDeprecated } = ctx;
-  const { url: baseUrl } = req;
-  const url = new URL(props.pageHref || baseUrl);
-  const segment = getSegmentFromBag(ctx);
-  const currentPageoffset = props.pageOffset ?? 1;
-  const { selectedFacets: baseSelectedFacets, page, ...args } = searchArgsOf(
-    props,
-    url,
-  );
-  let pathToUse = url.href.replace(url.origin, "");
+  const start = performance.now();
+  const span = ctx.monitoring?.tracer.startSpan("intelligent-search-metrics");
+  try {
+    const { secure } = ctx;
+    const { url: baseUrl } = req;
+    const url = new URL(props.pageHref || baseUrl);
+    span?.setAttribute("url", url.href);
+    const segment = getSegmentFromBag(ctx);
+    const currentPageoffset = props.pageOffset ?? 1;
 
-  if (pathToUse === "/" || pathToUse === "/*") {
-    const result = await PLPDefaultPath({ level: 1 }, req, ctx);
-    pathToUse = result?.possiblePaths[0] ?? pathToUse;
-  }
+    props.simulationBehavior = props.simulationBehavior ||
+      ctx.advancedConfigs?.simulationBehavior || "default";
 
-  const allPageTypes = await pageTypesFromUrl(pathToUse, ctx);
-  const pageTypes = getValidTypesFromPageTypes(allPageTypes);
+    const { selectedFacets: baseSelectedFacets, page, ...args } = searchArgsOf(
+      props,
+      url,
+    );
+    let pathToUse = url.href.replace(url.origin, "");
 
-  const selectedFacets = baseSelectedFacets.length === 0
-    ? filtersFromPathname(pageTypes)
-    : baseSelectedFacets;
-  const selected = withDefaultFacets(selectedFacets, ctx);
-  const fselected = props.priceFacets
-    ? selected
-    : selected.filter((f) => f.key !== "price");
-  const isInSeachFormat = Boolean(selected.length) || Boolean(args.query);
-  const pathQuery = queryFromPathname(isInSeachFormat, pageTypes, url.pathname);
-  const searchArgs = { ...args, query: args.query || pathQuery };
-  if (!isInSeachFormat && !pathQuery) {
-    return null;
-  }
-  const locale = segment?.payload?.cultureInfo ??
-    ctx.defaultSegment?.cultureInfo ?? "pt-BR";
+    if (pathToUse === "/" || pathToUse === "/*") {
+      const result = await PLPDefaultPath({ level: 1 }, req, ctx);
+      pathToUse = result?.possiblePaths[0] ?? pathToUse;
+    }
 
-  const params = withDefaultParams({ ...searchArgs, page, locale });
-  // search products on VTEX. Feel free to change any of these parameters
-  const [productsResult, facetsResult] = await Promise.all([
-    vcsDeprecated
-      ["GET /api/io/_v/api/intelligent-search/product_search/*facets"]({
+    const pageTypesStart = performance.now();
+    const allPageTypes = await pageTypesFromUrl(pathToUse, ctx);
+    const pageTypes = getValidTypesFromPageTypes(allPageTypes);
+    const pageTypesEnd = performance.now();
+    span?.setAttribute(
+      "page-types-time",
+      (pageTypesEnd - pageTypesStart).toString(),
+    );
+
+    const deliveryOptionsFacets = baseSelectedFacets.filter(({ key }) =>
+      key === "delivery-options" || key === "shipping"
+    );
+    const selectedFacets = baseSelectedFacets.filter(({ key }) =>
+        key !== "shipping" && key !== "delivery-options"
+      ).length === 0
+      ? filtersFromPathname(pageTypes)
+      : baseSelectedFacets;
+    const selected = withDefaultFacets(selectedFacets, ctx);
+    const fselected = props.priceFacets
+      ? selected
+      : selected.filter((f) =>
+        f.key !== "price"
+      );
+    const isInSeachFormat = Boolean(selected.length) || Boolean(args.query);
+    const pathQuery = queryFromPathname(
+      isInSeachFormat,
+      pageTypes,
+      url.pathname,
+    );
+    const searchArgs = { ...args, query: args.query || pathQuery };
+    if (!isInSeachFormat && !pathQuery) {
+      return null;
+    }
+
+    const locale = segment?.payload?.cultureInfo ??
+      ctx.defaultSegment?.cultureInfo ?? "pt-BR";
+
+    const params = withDefaultParams({ ...searchArgs, page, locale });
+    span?.setAttribute("simulationBehavior", searchArgs.simulationBehavior);
+    span?.setAttribute("isSearch", isInSeachFormat ? "true" : "false");
+
+    const productsStart = performance.now();
+    // search products on VTEX. Feel free to change any of these parameters
+    const [productsResult, facetsResult] = await Promise.all([
+      secure
+        ["GET /api/io/_v/api/intelligent-search/product_search/*facets"]({
+          ...params,
+          facets: toPath(mergeFacets(selected, deliveryOptionsFacets)),
+        }, {
+          ...STALE,
+          headers: segment ? withSegmentCookie(segment) : undefined,
+        }).then((res) => {
+          span?.setAttribute(
+            "fetch-products-time",
+            (performance.now() - productsStart).toString(),
+          );
+          span?.setAttribute("fetch-products-status", res.status.toString());
+          return res.json();
+        }),
+      secure["GET /api/io/_v/api/intelligent-search/facets/*facets"]({
         ...params,
-        facets: toPath(selected),
+        facets: toPath(mergeFacets(fselected, deliveryOptionsFacets)),
       }, {
         ...STALE,
         headers: segment ? withSegmentCookie(segment) : undefined,
-      }).then((res) => res.json()),
-    vcsDeprecated["GET /api/io/_v/api/intelligent-search/facets/*facets"]({
-      ...params,
-      facets: toPath(fselected),
-    }, { ...STALE, headers: segment ? withSegmentCookie(segment) : undefined })
-      .then((res) => res.json()),
-  ]);
-
-  const currentPageTypes = !props.useCollectionName
-    ? pageTypes
-    : pageTypes.map((pageType) => {
-      if (pageType.id !== pageTypes.at(-1)?.id) return pageType;
-
-      const name = productsResult?.products?.[0]?.productClusters?.find(
-        (collection) => collection.id === pageType.name,
-      )?.name ?? pageType.name;
-
-      return {
-        ...pageType,
-        name,
-      };
-    });
-
-  // It is a feature from Intelligent Search on VTEX panel
-  // redirect to a specific page based on configured rules
-  if (productsResult.redirect) {
-    redirect(
-      new URL(productsResult.redirect, url.origin)
-        .href,
+      })
+        .then((res) => {
+          span?.setAttribute(
+            "fetch-facets-time",
+            (performance.now() - productsStart).toString(),
+          );
+          span?.setAttribute("fetch-facets-status", res.status.toString());
+          return res.json();
+        }),
+    ]);
+    const productsEnd = performance.now();
+    span?.setAttribute(
+      "products-total-time",
+      (productsEnd - productsStart).toString(),
     );
-  }
-  /** Intelligent search API analytics. Fire and forget 🔫 */
-  const fullTextTerm = params["query"];
-  if (fullTextTerm) {
-    sendEvent({ type: "session.ping", url: url.href }, req, ctx)
-      .then(() =>
-        sendEvent(
-          {
-            type: "search.query",
-            text: fullTextTerm,
-            misspelled: productsResult.correction?.misspelled ?? false,
-            match: productsResult.recordsFiltered,
-            operator: productsResult.operator,
-            locale: segment?.payload?.cultureInfo ?? "pt-BR",
-            url: url.href,
-          },
-          req,
-          ctx,
+
+    const currentPageTypes = !props.useCollectionName
+      ? pageTypes
+      : pageTypes.map((pageType) => {
+        if (pageType.id !== pageTypes.at(-1)?.id) return pageType;
+
+        const name = productsResult?.products?.[0]?.productClusters?.find(
+          (collection) => collection.id === pageType.name,
+        )?.name ?? pageType.name;
+
+        return {
+          ...pageType,
+          name,
+        };
+      });
+
+    // It is a feature from Intelligent Search on VTEX panel
+    // redirect to a specific page based on configured rules
+    if (productsResult.redirect) {
+      redirect(
+        new URL(productsResult.redirect, url.origin)
+          .href,
+      );
+    }
+    /** Intelligent search API analytics. Fire and forget 🔫 */
+    const fullTextTerm = params["query"];
+    if (fullTextTerm) {
+      sendEvent({ type: "session.ping", url: url.href }, req, ctx)
+        .then(() =>
+          sendEvent(
+            {
+              type: "search.query",
+              text: fullTextTerm,
+              misspelled: productsResult.correction?.misspelled ?? false,
+              match: productsResult.recordsFiltered,
+              operator: productsResult.operator,
+              locale: segment?.payload?.cultureInfo ?? "pt-BR",
+              url: url.href,
+            },
+            req,
+            ctx,
+          )
         )
-      )
-      .catch(console.error);
+        .catch(console.error);
+    }
+    const { products: vtexProducts, pagination, recordsFiltered } =
+      productsResult;
+    const facets = selectPriceFacet(facetsResult.facets, selectedFacets);
+    // Transform VTEX product format into schema.org's compatible format
+    // If a property is missing from the final `products` array you can add
+    // it in here
+    const similarStart = performance.now();
+    const products = await Promise.all(
+      vtexProducts
+        .map((p) =>
+          toProduct(p, p.items.find(getFirstItemAvailable) || p.items[0], 0, {
+            baseUrl: baseUrl,
+            priceCurrency: segment?.payload?.currencyCode ?? "BRL",
+            includeOriginalAttributes: props.advancedConfigs
+              ?.includeOriginalAttributes,
+          })
+        )
+        .map((product) =>
+          props.similars ? withIsSimilarTo(req, ctx, product) : product
+        ),
+    );
+    const similarEnd = performance.now();
+    span?.setAttribute(
+      "similar-products-time",
+      (similarEnd - similarStart).toString(),
+    );
+    const paramsToPersist = new URLSearchParams();
+    searchArgs.query && paramsToPersist.set("q", searchArgs.query);
+    searchArgs.sort && paramsToPersist.set("sort", searchArgs.sort);
+    searchArgs.zipCode && paramsToPersist.set("zipcode", searchArgs.zipCode);
+    searchArgs.pickupPoint &&
+      paramsToPersist.set("pickupPoint", searchArgs.pickupPoint);
+    searchArgs.hideUnavailableItems &&
+      paramsToPersist.set(
+        "hideUnavailableItems",
+        searchArgs.hideUnavailableItems.toString(),
+      );
+    const filters = facets
+      .filter((f) => !f.hidden)
+      .map(toFilter(selectedFacets, paramsToPersist));
+    const itemListElement = pageTypesToBreadcrumbList(pageTypes, baseUrl);
+    const hasNextPage = Boolean(pagination.next.proxyUrl);
+    const hasPreviousPage = page > 0;
+    const nextPage = new URLSearchParams(url.searchParams);
+    const previousPage = new URLSearchParams(url.searchParams);
+    if (hasNextPage) {
+      nextPage.set("page", (page + currentPageoffset + 1).toString());
+    }
+    if (hasPreviousPage) {
+      previousPage.set("page", (page + currentPageoffset - 1).toString());
+    }
+    const currentPage = page + currentPageoffset;
+    const end = performance.now();
+    span?.setAttribute("total-time", (end - start).toString());
+    span?.setStatus({ code: SpanStatusCode.OK });
+    return {
+      "@type": "ProductListingPage",
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement,
+        numberOfItems: itemListElement.length,
+      },
+      filters,
+      products,
+      pageInfo: {
+        nextPage: hasNextPage ? `?${nextPage}` : undefined,
+        previousPage: hasPreviousPage ? `?${previousPage}` : undefined,
+        currentPage,
+        records: recordsFiltered,
+        recordPerPage: pagination.perPage,
+        pageTypes: allPageTypes.map(parsePageType),
+      },
+      sortOptions,
+      seo: safeJsonSerialize(pageTypesToSeo(
+        currentPageTypes,
+        baseUrl,
+        hasPreviousPage ? currentPage : undefined,
+      )),
+    };
+  } catch (error) {
+    span?.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: (error as Error).message,
+    });
+    throw error;
+  } finally {
+    span?.end();
   }
-  const { products: vtexProducts, pagination, recordsFiltered } =
-    productsResult;
-  const facets = selectPriceFacet(facetsResult.facets, selectedFacets);
-  // Transform VTEX product format into schema.org's compatible format
-  // If a property is missing from the final `products` array you can add
-  // it in here
-  const products = await Promise.all(
-    vtexProducts
-      .map((p) =>
-        toProduct(p, p.items.find(getFirstItemAvailable) || p.items[0], 0, {
-          baseUrl: baseUrl,
-          priceCurrency: segment?.payload?.currencyCode ?? "BRL",
-          includeOriginalAttributes: props.advancedConfigs
-            ?.includeOriginalAttributes,
-        })
-      )
-      .map((product) =>
-        props.similars ? withIsSimilarTo(req, ctx, product) : product
-      ),
-  );
-  const paramsToPersist = new URLSearchParams();
-  searchArgs.query && paramsToPersist.set("q", searchArgs.query);
-  searchArgs.sort && paramsToPersist.set("sort", searchArgs.sort);
-  const filters = facets
-    .filter((f) => !f.hidden)
-    .map(toFilter(selectedFacets, paramsToPersist));
-  const itemListElement = pageTypesToBreadcrumbList(pageTypes, baseUrl);
-  const hasNextPage = Boolean(pagination.next.proxyUrl);
-  const hasPreviousPage = page > 0;
-  const nextPage = new URLSearchParams(url.searchParams);
-  const previousPage = new URLSearchParams(url.searchParams);
-  if (hasNextPage) {
-    nextPage.set("page", (page + currentPageoffset + 1).toString());
-  }
-  if (hasPreviousPage) {
-    previousPage.set("page", (page + currentPageoffset - 1).toString());
-  }
-  const currentPage = page + currentPageoffset;
-  return {
-    "@type": "ProductListingPage",
-    breadcrumb: {
-      "@type": "BreadcrumbList",
-      itemListElement,
-      numberOfItems: itemListElement.length,
-    },
-    filters,
-    products,
-    pageInfo: {
-      nextPage: hasNextPage ? `?${nextPage}` : undefined,
-      previousPage: hasPreviousPage ? `?${previousPage}` : undefined,
-      currentPage,
-      records: recordsFiltered,
-      recordPerPage: pagination.perPage,
-      pageTypes: allPageTypes.map(parsePageType),
-    },
-    sortOptions,
-    seo: pageTypesToSeo(
-      currentPageTypes,
-      baseUrl,
-      hasPreviousPage ? currentPage : undefined,
-    ),
-  };
 };
 export const cache = "stale-while-revalidate";
 export const cacheKey = (props: Props, req: Request, ctx: AppContext) => {
@@ -460,7 +551,11 @@ export const cacheKey = (props: Props, req: Request, ctx: AppContext) => {
     ["page", (props.page ?? url.searchParams.get("page") ?? 1).toString()],
     ["sort", props.sort ?? url.searchParams.get("sort") ?? ""],
     ["fuzzy", props.fuzzy ?? url.searchParams.get("fuzzy") ?? ""],
-    ["hideUnavailableItems", props.hideUnavailableItems?.toString() ?? ""],
+    [
+      "hideUnavailableItems",
+      url.searchParams.get("hideUnavailableItems") ??
+        props.hideUnavailableItems?.toString() ?? "",
+    ],
     ["pageOffset", (props.pageOffset ?? 1).toString()],
     [
       "selectedFacets",
@@ -473,7 +568,16 @@ export const cacheKey = (props: Props, req: Request, ctx: AppContext) => {
     [
       "simulationBehavior",
       url.searchParams.get("simulationBehavior") || props.simulationBehavior ||
+      ctx.advancedConfigs?.simulationBehavior ||
       "default",
+    ],
+    [
+      "zipcode",
+      url.searchParams.get("zipcode") ?? "",
+    ],
+    [
+      "pickupPoint",
+      url.searchParams.get("pickupPoint") ?? "",
     ],
   ]);
   url.searchParams.forEach((value, key) => {

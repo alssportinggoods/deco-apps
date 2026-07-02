@@ -5,7 +5,7 @@ import { parseCookie } from "../../utils/vtexId.ts";
 
 interface AddressInput {
   name?: string;
-  addressName: string;
+  addressName?: string;
   addressType?: string;
   city?: string;
   complement?: string;
@@ -29,7 +29,7 @@ interface Props {
   /**
    * Address name.
    */
-  addressName: string;
+  addressName?: string;
   /**
    * Type of address. For example, Residential or Pickup, among others.
    */
@@ -134,6 +134,8 @@ async function action(
 
   return toPostalAddress({
     ...savedAddress,
+    addressName: savedAddress.addressName || "",
+    addressType: savedAddress.addressType || "",
     addressId: savedAddress.id || "",
     complement: savedAddress.complement || null,
     receiverName: savedAddress.receiverName || null,

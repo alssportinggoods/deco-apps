@@ -1178,6 +1178,10 @@ export interface Segment {
   /** @description pt-BR, en-US etc */
   cultureInfo: string;
   channelPrivacy: "public" | "private";
+  /**
+   * @description Semicolon-separated "key=value" pairs, e.g. "zip-code=22250-040;country=BRA;brand=acme"
+   */
+  facets?: string | null;
 }
 
 export interface WishlistItem {

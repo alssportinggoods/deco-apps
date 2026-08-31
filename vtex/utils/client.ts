@@ -1,4 +1,8 @@
 import { Userorderdetails, Userorderslist } from "./openapi/vcs.openapi.gen.ts";
+import type {
+  AutocompleteSearchSuggestions,
+  OpenAPI as ISV1,
+} from "./openapi/isv1.openapi.gen.ts";
 import {
   AuthResponse,
   Brand,
@@ -14,10 +18,12 @@ import {
   OrderFormOrder,
   PageType,
   PortalSuggestion,
+  Product,
   ProductSearchResult,
   SelectableGifts,
   SimulationItem,
   SimulationOrderForm,
+  Sort,
   SPEvent,
   StartAuthentication,
   Suggestion,
@@ -179,6 +185,38 @@ export interface VTEXCommerceStable {
       query: string;
       locale?: string;
     };
+  };
+  "GET /api/intelligent-search/v1/top-searches": {
+    response: Suggestion;
+    searchParams: ISV1["GET /top-searches"]["searchParams"];
+  };
+  "GET /api/intelligent-search/v1/autocomplete-suggestions": {
+    response: AutocompleteSearchSuggestions;
+    searchParams: ISV1["GET /autocomplete-suggestions"]["searchParams"];
+  };
+  "GET /api/intelligent-search/v1/search-suggestions": {
+    response: Suggestion;
+    searchParams: ISV1["GET /search-suggestions"]["searchParams"];
+  };
+  "GET /api/intelligent-search/v1/correction-search": {
+    response: CorrectionSearchResult;
+    searchParams: ISV1["GET /correction-search"]["searchParams"];
+  };
+  "GET /api/intelligent-search/v1/product-search/*facets": {
+    response: ProductSearchResult;
+    searchParams:
+      & Omit<ISV1["GET /product-search/:facets"]["searchParams"], "sort">
+      & { sort?: Sort };
+  };
+  "GET /api/intelligent-search/v1/facets/*facets": {
+    response: FacetSearchResult;
+    searchParams:
+      & Omit<ISV1["GET /facets/:facets"]["searchParams"], "sort">
+      & { sort?: Sort };
+  };
+  "GET /api/intelligent-search/v1/products": {
+    response: Product;
+    searchParams: ISV1["GET /products"]["searchParams"];
   };
   "GET /api/checkout/changeToAnonymousUser/:orderFormId": {
     response: OrderForm;

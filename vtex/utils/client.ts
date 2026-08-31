@@ -206,13 +206,25 @@ export interface VTEXCommerceStable {
     response: ProductSearchResult;
     searchParams:
       & Omit<ISV1["GET /product-search/:facets"]["searchParams"], "sort">
-      & { sort?: Sort };
+      & {
+        sort?: Sort;
+        /**
+         * @description Absent from the v1 OpenAPI schema, honoured by the engine
+         */
+        semanticRatio?: number;
+      };
   };
   "GET /api/intelligent-search/v1/facets/*facets": {
     response: FacetSearchResult;
     searchParams:
       & Omit<ISV1["GET /facets/:facets"]["searchParams"], "sort">
-      & { sort?: Sort };
+      & {
+        sort?: Sort;
+        /**
+         * @description Absent from the v1 OpenAPI schema, honoured by the engine
+         */
+        semanticRatio?: number;
+      };
   };
   "GET /api/intelligent-search/v1/products": {
     response: Product;

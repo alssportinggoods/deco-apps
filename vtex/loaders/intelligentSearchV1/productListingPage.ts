@@ -191,6 +191,11 @@ export interface Props {
    * @description Do not return facets marked as hidden in the admin
    */
   removeHiddenFacets?: boolean;
+  /**
+   * @title Semantic ratio
+   * @description How much semantic matching to blend into the results, from 0 to 1. VTEX does not document this parameter, so it can change without notice.
+   */
+  semanticRatio?: number;
 }
 
 const searchArgsOf = (props: Props, url: URL) => {
@@ -397,6 +402,7 @@ const loader = async (
           sponsoredCount: props.sponsoredCount?.toString(),
           advertisementPlacement: props.advertisementPlacement,
           repeatSponsoredProducts: props.repeatSponsoredProducts,
+          semanticRatio: props.semanticRatio,
           facets: toPath(mergeFacets(selected, deliveryOptionsFacets)),
         }).then((res) => {
           span?.setAttribute(
@@ -409,6 +415,7 @@ const loader = async (
       vcsDeprecated["GET /api/intelligent-search/v1/facets/*facets"]({
         ...params,
         removeHiddenFacets: props.removeHiddenFacets,
+        semanticRatio: props.semanticRatio,
         facets: toPath(mergeFacets(fselected, deliveryOptionsFacets)),
       })
         .then((res) => {
@@ -613,6 +620,7 @@ export const cacheKey = (props: Props, req: Request, ctx: AppContext) => {
       "pickupPoint",
       url.searchParams.get("pickupPoint") ?? "",
     ],
+    ["semanticRatio", props.semanticRatio?.toString() ?? ""],
   ]);
   url.searchParams.forEach((value, key) => {
     if (!ALLOWED_PARAMS.has(key.toLowerCase()) && !isFilterParam(key)) {

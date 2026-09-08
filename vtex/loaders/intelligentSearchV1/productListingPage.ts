@@ -331,6 +331,10 @@ const loader = async (
     const { url: baseUrl } = req;
     const url = new URL(props.pageHref || baseUrl);
     span?.setAttribute("url", url.href);
+    span?.setAttribute(
+      "semanticRatio",
+      props.semanticRatio?.toString() ?? "none",
+    );
     const segment = getSegmentFromBag(ctx);
     const currentPageoffset = props.pageOffset ?? 1;
 

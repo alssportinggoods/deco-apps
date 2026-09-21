@@ -90,11 +90,11 @@ export default async function getReviewProduct(
 
   return {
     page: {
-      currentPageNumber: fullReview.paging.current_page_number,
-      nextPageUrl: fullReview.paging.next_page_url,
-      pageSize: fullReview.paging.page_size,
-      pagesTotal: fullReview.paging.pages_total,
-      totalResults: fullReview.paging.total_results,
+      currentPageNumber: fullReview.paging?.current_page_number,
+      nextPageUrl: fullReview.paging?.next_page_url,
+      pageSize: fullReview.paging?.page_size,
+      pagesTotal: fullReview.paging?.pages_total,
+      totalResults: fullReview.paging?.total_results,
     },
     id: id,
     review,

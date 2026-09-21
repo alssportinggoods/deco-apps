@@ -49,7 +49,7 @@ export const toReview = (review: Review) => {
   };
 };
 
-export const toAggregateRating = (rollup: Rollup) => {
+export const toAggregateRating = (rollup: Rollup | undefined) => {
   if (!rollup) {
     return {
       "@type": "AggregateRating" as const,

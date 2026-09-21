@@ -79,13 +79,13 @@ export default async function getReviewProduct(
     });
 
   const fullReview = await fullReviewResponse.json();
-  const rollup = fullReview.results[0].rollup;
-  const reviews = fullReview.results[0].reviews;
+  const rollup = fullReview.results?.[0]?.rollup;
+  const reviews = fullReview.results?.[0]?.reviews;
 
   const aggregateRating = toAggregateRating(rollup);
 
-  const review = reviews.length >= 1
-    ? reviews?.map((item) => toReview(item))
+  const review = reviews?.length
+    ? reviews.map((item) => toReview(item))
     : undefined;
 
   return {

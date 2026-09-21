@@ -68,7 +68,7 @@ export default function productListingPage(
       if (result.status === "fulfilled" && result.value) {
         return {
           ...products[idx],
-          aggregateRating: toAggregateRating(result.value.results[0].rollup),
+          aggregateRating: toAggregateRating(result.value.results?.[0]?.rollup),
         };
       } else {
         return products[idx];

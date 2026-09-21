@@ -58,7 +58,7 @@ export default function productListPage(
 
     return fullReviews.map((review, idx) => ({
       ...products[idx],
-      aggregateRating: toAggregateRating(review.results[0].rollup),
+      aggregateRating: toAggregateRating(review.results?.[0]?.rollup),
     }));
   };
 }

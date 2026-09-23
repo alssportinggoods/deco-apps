@@ -14,7 +14,10 @@ import {
   withDefaultFacets,
   withDefaultParams,
 } from "../../utils/intelligentSearchV1/params.ts";
-import { asIntelligentSearchProduct } from "../../utils/intelligentSearchV1/transform.ts";
+import {
+  asIntelligentSearchProduct,
+  hasItems,
+} from "../../utils/intelligentSearchV1/transform.ts";
 import {
   getValidTypesFromPageTypes,
   pageTypesToBreadcrumbList,
@@ -490,6 +493,7 @@ const loader = async (
     const similarStart = performance.now();
     const products = await Promise.all(
       vtexProducts
+        .filter(hasItems)
         .map(asIntelligentSearchProduct)
         .map((p) =>
           toProduct(p, p.items.find(getFirstItemAvailable) || p.items[0], 0, {

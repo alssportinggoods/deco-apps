@@ -5,7 +5,10 @@ import {
   withDefaultFacets,
   withDefaultParams,
 } from "../../utils/intelligentSearchV1/params.ts";
-import { asIntelligentSearchProduct } from "../../utils/intelligentSearchV1/transform.ts";
+import {
+  asIntelligentSearchProduct,
+  hasItems,
+} from "../../utils/intelligentSearchV1/transform.ts";
 import {
   getSegmentCacheKeyWithoutUTM,
   getSegmentFromBag,
@@ -104,6 +107,7 @@ const loaders = async (
     searches: count ? searches.slice(0, count) : searches,
     products: await Promise.all(
       products
+        .filter(hasItems)
         .map(asIntelligentSearchProduct)
         .map((p) => toProduct(p, p.items[0], 0, options)).map((p) =>
           withIsSimilarTo(req, ctx, p)

@@ -54,3 +54,12 @@ export const asIntelligentSearchProduct = (product: Product): Product => ({
     images: item.images?.map(withImageLabelAsText),
   })),
 });
+
+/**
+ * v1 can list a product with an empty `items` array, even one the Intelligent
+ * Search API (Legacy) returns with its SKUs (e.g. 225682 for "helmet"). The
+ * transforms need a SKU to build a product, so these are dropped before them
+ * instead of failing the whole listing.
+ */
+export const hasItems = (product: Product): boolean =>
+  (product.items?.length ?? 0) > 0;

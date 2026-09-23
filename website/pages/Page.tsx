@@ -25,7 +25,7 @@ import { AppContext } from "../mod.ts";
 
 const noIndexedDomains = ["decocdn.com", "deco.site", "deno.dev"];
 
-const ONEDOLLAR_ENABLED = Deno.env.get("ONEDOLLAR_ENABLED") !== "false";
+const ONEDOLLAR_ENABLED = Deno.env.get("ONEDOLLAR_ENABLED") === "true";
 const ONEDOLLAR_COLLECTOR = Deno.env.get("ONEDOLLAR_COLLECTOR");
 const ONEDOLLAR_STATIC_SCRIPT = Deno.env.get("ONEDOLLAR_STATIC_SCRIPT");
 

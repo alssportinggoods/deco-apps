@@ -5,7 +5,10 @@ import {
   withDefaultFacets,
   withDefaultParams,
 } from "../../utils/intelligentSearchV1/params.ts";
-import { asIntelligentSearchProduct } from "../../utils/intelligentSearchV1/transform.ts";
+import {
+  asIntelligentSearchProduct,
+  hasItems,
+} from "../../utils/intelligentSearchV1/transform.ts";
 import type { OpenAPI as ISV1 } from "../../utils/openapi/isv1.openapi.gen.ts";
 import {
   getSegmentCacheKeyWithoutUTM,
@@ -268,9 +271,8 @@ const loader = async (
   // Transform VTEX product format into schema.org's compatible format
   // If a property is missing from the final `products` array you can add
   // it in here
-  let products = vtexProducts?.map(asIntelligentSearchProduct).map((p) =>
-    toProduct(p, preferredSKU(p.items, { props }), 0, options)
-  );
+  let products = vtexProducts?.filter(hasItems).map(asIntelligentSearchProduct)
+    .map((p) => toProduct(p, preferredSKU(p.items, { props }), 0, options));
 
   if (isProductIDList(props)) {
     products = sortProducts(products, props.ids || [], "sku");

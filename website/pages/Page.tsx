@@ -150,22 +150,34 @@ function Page(
             staticScriptUrl={ONEDOLLAR_STATIC_SCRIPT}
           />
         )}
-        <PageSections sections={sections} landmarks={landmarks} />
+        <PageSections
+          sections={sections}
+          landmarks={landmarks}
+          devMode={devMode}
+        />
       </ErrorBoundary>
     </DefaultImageQualityContext.Provider>
   );
 }
 
 function PageSections(
-  { sections, landmarks: config }: {
+  { sections, landmarks: config, devMode }: {
     sections: Sections;
     landmarks?: Landmarks;
+    devMode?: boolean;
   },
 ) {
   const landmarks = Array.isArray(sections)
     ? splitLandmarks(sections, config)
     : null;
   if (!landmarks) {
+    if (devMode && config?.beforeMain?.length) {
+      console.warn(
+        "[website/pages/Page] landmarks.beforeMain is configured but none of",
+        config.beforeMain,
+        "is a top-level section of this page, so it renders without <main>.",
+      );
+    }
     return <>{sections?.map(renderSection)}</>;
   }
   return (

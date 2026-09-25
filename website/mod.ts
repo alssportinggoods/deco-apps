@@ -5,6 +5,7 @@ import { Routes } from "./flags/audience.ts";
 import { TextReplace } from "./handlers/proxy.ts";
 import manifest, { Manifest } from "./manifest.gen.ts";
 import { Script } from "./types.ts";
+import type { Landmarks } from "./utils/landmarks.ts";
 import { type Matcher, type Page, type Section } from "@deco/deco/blocks";
 import {
   type App,
@@ -154,6 +155,12 @@ export interface Props {
    * @description Patterns that will be allowed to be proxied through images and assets (example: https://*.deco.cx/images/*). An empty array will allow all URLs.
    */
   whilelistURLs?: string[];
+
+  /**
+   * @title Page landmarks
+   * @description Which sections frame the page's <main> landmark. Leave empty to render pages without <main>.
+   */
+  landmarks?: Landmarks;
 
   /**
    * @hide

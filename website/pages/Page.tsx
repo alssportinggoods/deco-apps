@@ -22,7 +22,7 @@ import Events from "../components/Events.tsx";
 import { SEOSection } from "../components/Seo.tsx";
 import LiveControls from "../components/_Controls.tsx";
 import { AppContext } from "../mod.ts";
-import { splitLandmarks } from "../utils/landmarks.ts";
+import { type Landmarks, splitLandmarks } from "../utils/landmarks.ts";
 
 const noIndexedDomains = ["decocdn.com", "deco.site", "deno.dev"];
 
@@ -109,6 +109,7 @@ function Page(
     unindexedDomain,
     avoidRedirectingToEditor,
     defaultImageQuality,
+    landmarks,
   }: SectionProps<typeof loader>,
 ): JSX.Element {
   const context = Context.active();
@@ -149,14 +150,21 @@ function Page(
             staticScriptUrl={ONEDOLLAR_STATIC_SCRIPT}
           />
         )}
-        <PageSections sections={sections} />
+        <PageSections sections={sections} landmarks={landmarks} />
       </ErrorBoundary>
     </DefaultImageQualityContext.Provider>
   );
 }
 
-function PageSections({ sections }: { sections: Sections }) {
-  const landmarks = Array.isArray(sections) ? splitLandmarks(sections) : null;
+function PageSections(
+  { sections, landmarks: config }: {
+    sections: Sections;
+    landmarks?: Landmarks;
+  },
+) {
+  const landmarks = Array.isArray(sections)
+    ? splitLandmarks(sections, config)
+    : null;
   if (!landmarks) {
     return <>{sections?.map(renderSection)}</>;
   }
@@ -204,6 +212,7 @@ export const loader = async (
     unindexedDomain,
     avoidRedirectingToEditor: ctx.avoidRedirectingToEditor,
     defaultImageQuality: ctx.defaultImageQuality,
+    landmarks: ctx.landmarks,
   };
 };
 export function Preview(props: SectionProps<typeof loader>) {

@@ -22,6 +22,7 @@ import Events from "../components/Events.tsx";
 import { SEOSection } from "../components/Seo.tsx";
 import LiveControls from "../components/_Controls.tsx";
 import { AppContext } from "../mod.ts";
+import { splitLandmarks } from "../utils/landmarks.ts";
 
 const noIndexedDomains = ["decocdn.com", "deco.site", "deno.dev"];
 
@@ -148,9 +149,26 @@ function Page(
             staticScriptUrl={ONEDOLLAR_STATIC_SCRIPT}
           />
         )}
-        {sections?.map(renderSection)}
+        <PageSections sections={sections} />
       </ErrorBoundary>
     </DefaultImageQualityContext.Provider>
+  );
+}
+
+function PageSections({ sections }: { sections: Sections }) {
+  const landmarks = Array.isArray(sections) ? splitLandmarks(sections) : null;
+  if (!landmarks) {
+    return <>{sections?.map(renderSection)}</>;
+  }
+  return (
+    <>
+      {landmarks.beforeMain.map(renderSection)}
+      {/* The skip link targets this id; tabIndex lets it take focus. */}
+      <main id="main-content" tabIndex={-1} style={{ outline: "none" }}>
+        {landmarks.main.map(renderSection)}
+      </main>
+      {landmarks.afterMain.map(renderSection)}
+    </>
   );
 }
 

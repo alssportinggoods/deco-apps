@@ -22,6 +22,7 @@ import Events from "../components/Events.tsx";
 import { SEOSection } from "../components/Seo.tsx";
 import LiveControls from "../components/_Controls.tsx";
 import { AppContext } from "../mod.ts";
+import { type Landmarks, splitLandmarks } from "../utils/landmarks.ts";
 
 const noIndexedDomains = ["decocdn.com", "deco.site", "deno.dev"];
 
@@ -108,6 +109,7 @@ function Page(
     unindexedDomain,
     avoidRedirectingToEditor,
     defaultImageQuality,
+    landmarks,
   }: SectionProps<typeof loader>,
 ): JSX.Element {
   const context = Context.active();
@@ -148,9 +150,45 @@ function Page(
             staticScriptUrl={ONEDOLLAR_STATIC_SCRIPT}
           />
         )}
-        {sections?.map(renderSection)}
+        <PageSections
+          sections={sections}
+          landmarks={landmarks}
+          devMode={devMode}
+        />
       </ErrorBoundary>
     </DefaultImageQualityContext.Provider>
+  );
+}
+
+function PageSections(
+  { sections, landmarks: config, devMode }: {
+    sections: Sections;
+    landmarks?: Landmarks;
+    devMode?: boolean;
+  },
+) {
+  const landmarks = Array.isArray(sections)
+    ? splitLandmarks(sections, config)
+    : null;
+  if (!landmarks) {
+    if (devMode && config?.beforeMain?.length) {
+      console.warn(
+        "[website/pages/Page] landmarks.beforeMain is configured but none of",
+        config.beforeMain,
+        "is a top-level section of this page, so it renders without <main>.",
+      );
+    }
+    return <>{sections?.map(renderSection)}</>;
+  }
+  return (
+    <>
+      {landmarks.beforeMain.map(renderSection)}
+      {/* The skip link targets this id; tabIndex lets it take focus. */}
+      <main id="main-content" tabIndex={-1} style={{ outline: "none" }}>
+        {landmarks.main.map(renderSection)}
+      </main>
+      {landmarks.afterMain.map(renderSection)}
+    </>
   );
 }
 
@@ -186,6 +224,7 @@ export const loader = async (
     unindexedDomain,
     avoidRedirectingToEditor: ctx.avoidRedirectingToEditor,
     defaultImageQuality: ctx.defaultImageQuality,
+    landmarks: ctx.landmarks,
   };
 };
 export function Preview(props: SectionProps<typeof loader>) {

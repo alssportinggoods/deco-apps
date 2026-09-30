@@ -1,4 +1,6 @@
+import type { ClientOf } from "../../../utils/http.ts";
 import type { AppContext } from "../../mod.ts";
+import type { VTEXCommerceStable } from "../../utils/client.ts";
 
 export interface Props {
   /** Message Center template name, e.g. `oms-return-request`. */
@@ -27,7 +29,11 @@ const action = async (
 ): Promise<void> => {
   const { templateName, jsonData, logEvidence = false } = props;
 
-  await ctx.vcsDeprecated["POST /api/mail-service/pvt/sendmail"]({}, {
+  // The publicUrl proxy (vcs/vcsDeprecated) drops app-key auth here and
+  // answers 401; `sub` has the same headers on {account}.vtexcommercestable.
+  const commerceStable = ctx.sub as unknown as ClientOf<VTEXCommerceStable>;
+
+  await commerceStable["POST /api/mail-service/pvt/sendmail"]({}, {
     body: { templateName, jsonData, logEvidence },
     headers: {
       accept: "application/json",

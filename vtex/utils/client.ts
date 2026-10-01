@@ -72,6 +72,14 @@ export interface VTEXCommerceStable {
     body: FormData;
     response: Record<string, string>;
   };
+  "POST /api/mail-service/pvt/sendmail": {
+    body: {
+      templateName: string;
+      jsonData: Record<string, unknown>;
+      logEvidence?: boolean;
+    };
+    response: unknown;
+  };
   "POST /api/checkout/pub/orders/:orderId/user-cancel-request": {
     response: unknown;
     body: {

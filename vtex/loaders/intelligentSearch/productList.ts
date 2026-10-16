@@ -224,6 +224,9 @@ const loader = async (
   const locale = segment?.payload?.cultureInfo ??
     ctx.defaultSegment?.cultureInfo ?? "pt-BR";
 
+  props.simulationBehavior = props.simulationBehavior ||
+    ctx.advancedConfigs?.simulationBehavior || "default";
+
   const { selectedFacets, ...args } = fromProps({ props }, ctx);
   const params = withDefaultParams({ ...args, locale });
   const facets = withDefaultFacets(selectedFacets, ctx);
@@ -324,6 +327,9 @@ export const cacheKey = (
 ) => {
   const props = expandedProps.props ??
     (expandedProps as unknown as Props["props"]);
+
+  props.simulationBehavior = props.simulationBehavior ||
+    ctx.advancedConfigs?.simulationBehavior || "default";
 
   const url = new URL(req.url);
 

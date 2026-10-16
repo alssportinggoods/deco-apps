@@ -7,6 +7,11 @@ export interface Variable {
 }
 
 export type Font = {
+  type: "google";
+  family: string;
+  link: string;
+} | {
+  type: "css";
   family: string;
   styleSheet: string;
 };
@@ -37,19 +42,40 @@ function Theme({ fonts = [], variables = [], colorScheme }: Props) {
 
   const css = `* {${vars}}`;
   const html = colorScheme ? withPrefersColorScheme(colorScheme, css) : css;
+  const hasGoogleFont = fonts?.some((font) =>
+    font.type === "google" && font.link
+  );
 
   return (
     <Head>
-      {fonts?.map(({ styleSheet }) => (
-        styleSheet
-          ? (
+      {hasGoogleFont
+        ? (
+          <>
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link
+              rel="preconnect"
+              href="https://fonts.gstatic.com"
+              crossOrigin=""
+            />
+          </>
+        )
+        : null}
+      {fonts?.map((font) => {
+        if (font.type === "google" && font.link) {
+          return <link href={font.link} rel="stylesheet" />;
+        }
+
+        if (font.type === "css" && font.styleSheet) {
+          return (
             <style
               type="text/css"
-              dangerouslySetInnerHTML={{ __html: styleSheet }}
+              dangerouslySetInnerHTML={{ __html: font.styleSheet }}
             />
-          )
-          : null
-      ))}
+          );
+        }
+
+        return null;
+      })}
       {html && (
         <style
           type="text/css"

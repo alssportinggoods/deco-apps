@@ -2,17 +2,25 @@ import { Head } from "$fresh/runtime.ts";
 import { AppContext, Extension } from "../mod.ts";
 import { type SectionProps } from "@deco/deco";
 import { useScript } from "@deco/deco/hooks";
+
 const script = (extensions: Extension[]) => {
   if (extensions.length > 0) {
     if (document.readyState === "complete") {
-      document.body.setAttribute("hx-ext", extensions.join(","));
+      document.body.setAttribute(
+        "hx-ext",
+        extensions.map((ext) => ext.name).join(","),
+      );
       return;
     }
     globalThis.onload = () => {
-      document.body.setAttribute("hx-ext", extensions.join(","));
+      document.body.setAttribute(
+        "hx-ext",
+        extensions.map((ext) => ext.name).join(","),
+      );
     };
   }
 };
+
 function Section({ version, cdn, extensions }: SectionProps<typeof loader>) {
   return (
     <Head>
@@ -27,7 +35,7 @@ function Section({ version, cdn, extensions }: SectionProps<typeof loader>) {
       {extensions.map((ext) => (
         <script
           defer
-          src={`${cdn}/htmx.org@${version}/dist/ext/${ext}.js`}
+          src={ext.url}
           crossOrigin="anonymous"
         />
       ))}

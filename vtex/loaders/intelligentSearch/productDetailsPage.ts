@@ -115,7 +115,8 @@ const loader = async (
     query,
     count: 1,
     locale,
-    simulationBehavior: props.simulationBehavior ?? "default",
+    simulationBehavior: props.simulationBehavior ??
+      ctx.advancedConfigs?.simulationBehavior ?? "default",
   });
   const { products: [product] } = await vcsDeprecated
     ["GET /api/io/_v/api/intelligent-search/product_search/*facets"]({
@@ -136,7 +137,8 @@ const loader = async (
     const params = withDefaultParams({
       query: `sku:${sku.kitItems.join(";")}`,
       count: sku.kitItems.length,
-      simulationBehavior: props.simulationBehavior ?? "default",
+      simulationBehavior: props.simulationBehavior ??
+        ctx.advancedConfigs?.simulationBehavior ?? "default",
     });
 
     const result = await vcsDeprecated

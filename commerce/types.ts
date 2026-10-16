@@ -413,9 +413,12 @@ export interface Person extends Omit<Thing, "@type"> {
   taxID?: string;
   /** The telephone number. */
   telephone?: string;
+  /** The birth date of the person. */
+  birthDate?: string;
   /** A property-value pair representing an additional characteristic of the entity. */
   additionalProperty?: PropertyValue[];
 }
+
 // NON SCHEMA.ORG Compliant. Should be removed ASAP
 export interface Author extends Omit<Thing, "@type"> {
   "@type": "Author";
@@ -603,6 +606,7 @@ export interface PostalAddress extends Omit<ContactPoint, "@type"> {
   /** The longitude of a location. For example -122.08585 (WGS 84). */
   longitude?: number;
 }
+
 export interface LocationFeatureSpecification
   extends Omit<PropertyValue, "@type"> {
   "@type": "LocationFeatureSpecification";

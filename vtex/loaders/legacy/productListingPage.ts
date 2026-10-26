@@ -19,6 +19,7 @@ import {
 import { withIsSimilarTo } from "../../utils/similars.ts";
 import { parsePageType } from "../../utils/transform.ts";
 import { legacyFacetToFilter, toProduct } from "../../utils/transform.ts";
+import { safeJsonSerialize } from "../../../website/utils/html.ts";
 import type {
   AdvancedLoaderConfig,
   Item,
@@ -435,11 +436,11 @@ const loader = async (
       pageTypes: allPageTypes.map(parsePageType),
     },
     sortOptions,
-    seo: pageTypesToSeo(
+    seo: safeJsonSerialize(pageTypesToSeo(
       currentPageTypes,
       baseUrl,
       hasPreviousPage ? currentPage : undefined,
-    ),
+    )),
   };
 };
 

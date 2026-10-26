@@ -527,7 +527,10 @@ const loader = async (
       .filter((f) => !f.hidden)
       .map(toFilter(selectedFacets, paramsToPersist));
     const itemListElement = pageTypesToBreadcrumbList(pageTypes, baseUrl);
-    const hasNextPage = Boolean(pagination.next.proxyUrl);
+    // VTEX stopped returning pagination.next (2026-10-26); derive it from the totals.
+    const perPage = pagination?.perPage || searchArgs.count;
+    const hasNextPage = (page + 1) * perPage < recordsFiltered &&
+      page + 1 <= VTEX_MAX_PAGES - currentPageoffset;
     const hasPreviousPage = page > 0;
     const nextPage = new URLSearchParams(url.searchParams);
     const previousPage = new URLSearchParams(url.searchParams);
@@ -555,7 +558,7 @@ const loader = async (
         previousPage: hasPreviousPage ? `?${previousPage}` : undefined,
         currentPage,
         records: recordsFiltered,
-        recordPerPage: pagination.perPage,
+        recordPerPage: perPage,
         pageTypes: allPageTypes.map(parsePageType),
       },
       sortOptions,

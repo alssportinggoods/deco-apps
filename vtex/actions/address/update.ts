@@ -113,6 +113,8 @@ async function action(
         addressId,
         addressFields: {
           ...props,
+          addressType: props.addressType || "",
+          addressName: props.addressName || "",
           receiverName: props.receiverName || null,
           complement: props.complement || null,
         },

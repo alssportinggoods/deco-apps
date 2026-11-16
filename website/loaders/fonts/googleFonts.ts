@@ -1,7 +1,5 @@
-import { fetchSafe } from "../../../utils/fetch.ts";
-import { Font } from "../../components/Theme.tsx";
-import type { Manifest } from "../../manifest.gen.ts";
 import { hashStringSync } from "../../../utils/shortHash.ts";
+import { Font } from "../../components/Theme.tsx";
 
 interface Props {
   fonts: GoogleFont[];
@@ -36,11 +34,6 @@ interface GoogleFont {
   family: string;
   variations: FontVariation[];
 }
-
-const ASSET_LOADER_PATH =
-  "/live/invoke/website/loaders/asset.ts" satisfies `/live/invoke/${keyof Manifest[
-    "loaders"
-  ]}`;
 
 const getFontVariations = (variations: FontVariation[]) => {
   if (variations.length === 0) {
@@ -86,20 +79,11 @@ const getFontVariations = (variations: FontVariation[]) => {
   return `:${hasItalic ? "ital," : ""}wght@${variants.join(";")}`;
 };
 
-const NEW_BROWSER_KEY = {
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
-};
-
-const OLD_BROWSER_KEY = {
-  "User-Agent": "deco-cx/1.0",
-};
-
-const loader = async (props: Props, _req: Request): Promise<Font> => {
+const loader = (props: Props, _req: Request): Font => {
   const { fonts = [] } = props;
   // If no fonts requested, avoid making a request that will 400 on Google Fonts
   if (fonts.length === 0) {
-    return { family: "", styleSheet: "" };
+    return { family: "", link: "", type: "google" };
   }
   const url = new URL("https://fonts.googleapis.com/css2?display=swap");
 
@@ -123,35 +107,10 @@ const loader = async (props: Props, _req: Request): Promise<Font> => {
     );
   }
 
-  const logFontError = (label: string, url: URL, e: unknown) => {
-    const message = e instanceof Error ? e.message : String(e);
-    const short = message.length > 300 ? `${message.slice(0, 300)}…` : message;
-    console.error(
-      `Error fetching font (${label}): ${url.toString()} - ${short}`,
-    );
-  };
-
-  const sheets = await Promise.all([
-    fetchSafe(url, { headers: OLD_BROWSER_KEY }).then((res) => res.text())
-      .catch((e) => {
-        logFontError("OLD_UA", url, e);
-        return "";
-      }),
-    fetchSafe(url, { headers: NEW_BROWSER_KEY }).then((res) => res.text())
-      .catch((e) => {
-        logFontError("NEW_UA", url, e);
-        return "";
-      })
-      .catch(() => ""),
-  ]);
-
-  const styleSheet = sheets.join("\n").replaceAll(
-    "https://",
-    `${ASSET_LOADER_PATH}?src=https://`,
-  );
   return {
-    family: Object.keys(reduced).join(", "),
-    styleSheet,
+    type: "google",
+    family: fonts.map((font) => font.family).join(", "),
+    link: url.toString(),
   };
 };
 

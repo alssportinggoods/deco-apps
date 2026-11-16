@@ -30,11 +30,15 @@ export default async function loader(
   const { geoCoordinates, postalCode, countryCode } = props;
   const { vcs } = ctx;
 
-  const _props = geoCoordinates
+  const _props: { geoCoordinates: number[] } | {
+    postalCode: string;
+    countryCode: string;
+  } = geoCoordinates
     ? { geoCoordinates }
-    : { postalCode, countryCode };
+    : { postalCode: postalCode!, countryCode: countryCode! };
 
   const pickupPoints = await vcs
+    // @ts-expect-error - the api is not well-typed
     ["GET /api/checkout/pub/pickup-points"](_props)
     .then((r) => r.json()) as {
       paging: { page: number; pageSize: number; total: number; pages: number };

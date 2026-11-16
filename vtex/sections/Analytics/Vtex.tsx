@@ -59,6 +59,8 @@ const snippet = ({ account, anonymousCookie, sessionCookie }: SnippetProps) => {
     ...cookies,
   };
   const eventFetch = (props: SPEvent) => {
+    // Fire-and-forget. Ad blockers and dropped connections reject it, and
+    // with nothing awaiting it that surfaced as an unhandled rejection.
     fetch(apiUrl, {
       method: "POST",
       body: JSON.stringify({
@@ -68,7 +70,7 @@ const snippet = ({ account, anonymousCookie, sessionCookie }: SnippetProps) => {
       headers: {
         "Content-Type": "application/json",
       },
-    });
+    }).catch(() => {});
   };
   // deno-lint-ignore no-explicit-any
   function isSelectItemEvent(event: any): event is SelectItemEvent {

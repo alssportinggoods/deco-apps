@@ -79,22 +79,22 @@ export default async function getReviewProduct(
     });
 
   const fullReview = await fullReviewResponse.json();
-  const rollup = fullReview.results[0].rollup;
-  const reviews = fullReview.results[0].reviews;
+  const rollup = fullReview.results?.[0]?.rollup;
+  const reviews = fullReview.results?.[0]?.reviews;
 
   const aggregateRating = toAggregateRating(rollup);
 
-  const review = reviews.length >= 1
-    ? reviews?.map((item) => toReview(item))
+  const review = reviews?.length
+    ? reviews.map((item) => toReview(item))
     : undefined;
 
   return {
     page: {
-      currentPageNumber: fullReview.paging.current_page_number,
-      nextPageUrl: fullReview.paging.next_page_url,
-      pageSize: fullReview.paging.page_size,
-      pagesTotal: fullReview.paging.pages_total,
-      totalResults: fullReview.paging.total_results,
+      currentPageNumber: fullReview.paging?.current_page_number,
+      nextPageUrl: fullReview.paging?.next_page_url,
+      pageSize: fullReview.paging?.page_size,
+      pagesTotal: fullReview.paging?.pages_total,
+      totalResults: fullReview.paging?.total_results,
     },
     id: id,
     review,

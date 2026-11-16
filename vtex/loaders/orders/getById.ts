@@ -1,4 +1,5 @@
-import { AppContext } from "../../mod.ts";
+import type { AppContext } from "../../mod.ts";
+import type { UserOrderDetails } from "../../utils/types.ts";
 import { parseCookie } from "../../utils/vtexId.ts";
 
 interface Props {
@@ -6,6 +7,7 @@ interface Props {
 }
 
 /**
+ * @title VTEX - Get User Order By Id
  * @title Get User Order By Id
  * @description The user must be authenticated or have OMS permissions to access this endpoint
  */
@@ -13,7 +15,7 @@ export default async function loader(
   { orderId }: Props,
   req: Request,
   ctx: AppContext,
-) {
+): Promise<UserOrderDetails> {
   const { vcsDeprecated } = ctx;
   const { cookie } = parseCookie(req.headers, ctx.account);
 
@@ -27,7 +29,7 @@ export default async function loader(
         accept: "application/json",
       },
     },
-  ).then((res) => res.json());
+  ).then((res) => res.json()) as unknown as UserOrderDetails;
 
   return order;
 }

@@ -13,7 +13,10 @@ import {
 } from "../../utils/segment.ts";
 import { withIsSimilarTo } from "../../utils/similars.ts";
 import { toProduct } from "../../utils/transform.ts";
-import type { AdvancedLoaderConfig } from "../../utils/types.ts";
+import type {
+  AdvancedLoaderConfig,
+  SimulationBehavior,
+} from "../../utils/types.ts";
 
 export interface Props {
   query?: string;
@@ -33,6 +36,11 @@ export interface Props {
    * @description Further change loader behaviour
    */
   advancedConfigs?: AdvancedLoaderConfig;
+  /**
+   * @title Simulation Behavior
+   * @description Defines the simulation behavior.
+   */
+  simulationBehavior?: SimulationBehavior;
 }
 
 /**
@@ -69,7 +77,13 @@ const loaders = async (
 
   const productSearch = () => {
     const facets = withDefaultFacets([], ctx);
-    const params = withDefaultParams({ query, count: count ?? 4, locale });
+    const params = withDefaultParams({
+      query,
+      count: count ?? 4,
+      locale,
+      simulationBehavior: props.simulationBehavior ??
+        ctx.advancedConfigs?.simulationBehavior ?? "default",
+    });
 
     return vcsDeprecated
       ["GET /api/io/_v/api/intelligent-search/product_search/*facets"]({
@@ -110,7 +124,13 @@ export const cacheKey = (props: Props, _req: Request, ctx: AppContext) => {
   const segment = ctx.advancedConfigs?.removeUTMFromCacheKey
     ? getSegmentCacheKeyWithoutUTM(ctx)
     : getSegmentFromBag(ctx)?.token;
-  return `suggestions-${props.query ?? ""}-${props.count ?? 4}-${segment}`;
+
+  const query = props.query ?? "";
+  const count = props.count ?? 4;
+  const simulationBehavior = props.simulationBehavior ??
+    ctx.advancedConfigs?.simulationBehavior ?? "default";
+
+  return `suggestions-${query}-${count}-${simulationBehavior}-${segment}`;
 };
 
 export default loaders;

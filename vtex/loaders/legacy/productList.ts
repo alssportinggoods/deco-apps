@@ -8,9 +8,8 @@ import {
   withSegmentCookie,
 } from "../../utils/segment.ts";
 import { withIsSimilarTo } from "../../utils/similars.ts";
-import { toProduct } from "../../utils/transform.ts";
+import { sortProducts, toProduct } from "../../utils/transform.ts";
 import type { LegacyItem, LegacySort } from "../../utils/types.ts";
-import { sortProducts } from "../../utils/transform.ts";
 
 /**
  * @title Collection ID
@@ -313,10 +312,8 @@ export const cacheKey = (
     params.append("skuids", skuIds.join(","));
   }
 
-  if (
-    isProductIDProps(props)
-  ) {
-    const productIds = [props.productIds ?? []].sort();
+  if (isProductIDProps(props)) {
+    const productIds = [...props.productIds ?? []].sort();
     params.append("productids", productIds.join(","));
   }
 

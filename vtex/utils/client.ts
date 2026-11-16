@@ -1,11 +1,13 @@
-import {
-  Userorderdetails,
-  Userorderslist,
-} from "./openapi/orders.openapi.gen.ts";
+import { Userorderdetails, Userorderslist } from "./openapi/vcs.openapi.gen.ts";
+import type {
+  AutocompleteSearchSuggestions,
+  OpenAPI as ISV1,
+} from "./openapi/isv1.openapi.gen.ts";
 import {
   AuthResponse,
   Brand,
   Category,
+  CorrectionSearchResult,
   CreateNewDocument,
   FacetSearchResult,
   InstallmentOption,
@@ -16,10 +18,12 @@ import {
   OrderFormOrder,
   PageType,
   PortalSuggestion,
+  Product,
   ProductSearchResult,
   SelectableGifts,
   SimulationItem,
   SimulationOrderForm,
+  Sort,
   SPEvent,
   StartAuthentication,
   Suggestion,
@@ -54,15 +58,27 @@ export interface VTEXCommerceStable {
     body: URLSearchParams;
     response: AuthResponse;
   };
+  "POST /api/vtexid/pub/authentication/startlogin": {
+    body: FormData;
+    response: unknown;
+  };
   "POST /api/vtexid/pub/authentication/classic/setpassword": {
-    searchParams: { scope?: string; locale?: string };
-    body: URLSearchParams;
+    searchParams: { scope?: string; locale?: string; expireSessions?: boolean };
+    body: URLSearchParams | FormData;
     response: AuthResponse;
   };
   "POST /api/vtexid/pub/authentication/accesskey/send": {
     searchParams: { deliveryMethod: "email" };
     body: FormData;
     response: Record<string, string>;
+  };
+  "POST /api/mail-service/pvt/sendmail": {
+    body: {
+      templateName: string;
+      jsonData: Record<string, unknown>;
+      logEvidence?: boolean;
+    };
+    response: unknown;
   };
   "POST /api/checkout/pub/orders/:orderId/user-cancel-request": {
     response: unknown;
@@ -155,6 +171,7 @@ export interface VTEXCommerceStable {
       fuzzy?: string;
       locale?: string;
       hideUnavailableItems: boolean;
+      "zip-code"?: string;
     };
   };
   "GET /api/io/_v/api/intelligent-search/facets/*facets": {
@@ -167,9 +184,60 @@ export interface VTEXCommerceStable {
       fuzzy?: string;
       locale?: string;
       hideUnavailableItems: boolean;
+      "zip-code"?: string;
     };
   };
-
+  "GET /api/io/_v/api/intelligent-search/correction_search": {
+    response: CorrectionSearchResult;
+    searchParams: {
+      query: string;
+      locale?: string;
+    };
+  };
+  "GET /api/intelligent-search/v1/top-searches": {
+    response: Suggestion;
+    searchParams: ISV1["GET /top-searches"]["searchParams"];
+  };
+  "GET /api/intelligent-search/v1/autocomplete-suggestions": {
+    response: AutocompleteSearchSuggestions;
+    searchParams: ISV1["GET /autocomplete-suggestions"]["searchParams"];
+  };
+  "GET /api/intelligent-search/v1/search-suggestions": {
+    response: Suggestion;
+    searchParams: ISV1["GET /search-suggestions"]["searchParams"];
+  };
+  "GET /api/intelligent-search/v1/correction-search": {
+    response: CorrectionSearchResult;
+    searchParams: ISV1["GET /correction-search"]["searchParams"];
+  };
+  "GET /api/intelligent-search/v1/product-search/*facets": {
+    response: ProductSearchResult;
+    searchParams:
+      & Omit<ISV1["GET /product-search/:facets"]["searchParams"], "sort">
+      & {
+        sort?: Sort;
+        /**
+         * @description Absent from the v1 OpenAPI schema, honoured by the engine
+         */
+        semanticRatio?: number;
+      };
+  };
+  "GET /api/intelligent-search/v1/facets/*facets": {
+    response: FacetSearchResult;
+    searchParams:
+      & Omit<ISV1["GET /facets/:facets"]["searchParams"], "sort">
+      & {
+        sort?: Sort;
+        /**
+         * @description Absent from the v1 OpenAPI schema, honoured by the engine
+         */
+        semanticRatio?: number;
+      };
+  };
+  "GET /api/intelligent-search/v1/products": {
+    response: Product;
+    searchParams: ISV1["GET /products"]["searchParams"];
+  };
   "GET /api/checkout/changeToAnonymousUser/:orderFormId": {
     response: OrderForm;
     searchParams: { sc?: string };
@@ -183,7 +251,7 @@ export interface VTEXCommerceStable {
     };
   };
   "POST /api/checkout/pub/orderForm": {
-    searchParams: { sc?: string };
+    searchParams: { sc?: string; forceNewCart?: boolean };
     response: OrderForm;
   };
   "GET /api/checkout/pub/orderForm/:orderFormId/installments": {
@@ -292,6 +360,10 @@ export interface VTEXCommerceStable {
     searchParams: {
       _schema?: string;
     };
+    response: CreateNewDocument;
+    body: Record<string, unknown>;
+  };
+  "PATCH /api/dataentities/:acronym/documents/:documentId": {
     response: CreateNewDocument;
     body: Record<string, unknown>;
   };

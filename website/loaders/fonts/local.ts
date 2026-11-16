@@ -88,6 +88,7 @@ const loader = (props: Props): Font => {
   const styleSheet = fontFaces.join("\n");
 
   return {
+    type: "css",
     family: Object.keys(reduced).join(", "),
     styleSheet,
   };

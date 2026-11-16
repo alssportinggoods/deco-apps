@@ -38,9 +38,6 @@ interface State extends Props {
 export default function App(
   { appKey, locale, merchantId, merchantGroup }: Props,
 ) {
-  if (!appKey) {
-    throw new Error("Missing appKey");
-  }
   const stringAppKey = typeof appKey === "string"
     ? appKey
     : appKey?.get?.() ?? "";

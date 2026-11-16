@@ -1,0 +1,2088 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "VTEX ID",
+    "description": "VTEX ID API provides endpoints to manage user authentication in your VTEX store. Check the [Authentication](https://developers.vtex.com/docs/guides/authentication) guide for more information.\r\n\r\n## Index\r\n\r\n### Storefront users\r\n\r\n- `POST` [Create storefront user with username](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/authenticator/storefront/users): Registers a new storefront user in VTEX ID using a unique login key (username).\r\n- `GET` [Get storefront user by identifier](https://developers.vtex.com/docs/api-reference/vtex-id-api#get-/api/vtexid/pvt/user/info): Fetches a storefront user by their identifier (username or email).\r\n\r\n### Authentication\r\n\r\n- `POST` [Generate authentication token](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/vtexid/apptoken/login)\r\n- `POST` [Check authenticated user](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/vtexid/credential/validate)\r\n- `POST` [Enable or disable repeated passwords](https://developers.vtex.com/docs/api-reference/vtex-id-api#get-/api/vtexid/pub/providers/setup/password/webstore/password)\r\n- `POST` [Expire user password](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/vtexid/password/expire)\r\n- `GET` [Get user ID by email](https://developers.vtex.com/docs/api-reference/vtex-id-api#get-/api/vtexid/pvt/user/id) \r\n\r\n### Token renewal\r\n- `PATCH` [Initiate token renewal](https://developers.vtex.com/docs/api-reference/vtex-id-api#patch-/api/vtexid/apikey/-apiKey-/apitoken/renew)\r\n- `PATCH` [Complete token renewal](https://developers.vtex.com/docs/api-reference/vtex-id-api#patch-/api/vtexid/apikey/-apiKey-/apitoken/finish-renewal)\r\n\r\n### Refresh token (Headless)\r\n- `GET` [Start authentication](https://developers.vtex.com/docs/api-reference/vtex-id-api#get-/api/vtexid/pub/authentication/start)\r\n- `POST` [Send access key](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/vtexid/pub/authentication/accesskey/send)\r\n- `POST` [Validate session](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/vtexid/pub/authentication/accesskey/validate)\r\n- `POST` [Refresh token](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/vtexid/refreshtoken/webstore)",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://{accountName}.{environment}.com.br",
+      "description": "VTEX server URL.",
+      "variables": {
+        "accountName": {
+          "description": "Name of the VTEX account. Used as part of the URL.",
+          "default": "apiexamples"
+        },
+        "environment": {
+          "description": "Environment to use. Used as part of the URL.",
+          "enum": [
+            "vtexcommercestable"
+          ],
+          "default": "vtexcommercestable"
+        }
+      }
+    },
+    {
+      "url": "https://{accountName}.{environment}.com",
+      "description": "VTEX server URL.",
+      "variables": {
+        "accountName": {
+          "description": "Name of the VTEX account. Used as part of the URL.",
+          "default": "apiexamples"
+        },
+        "environment": {
+          "description": "Environment to use. Used as part of the URL.",
+          "enum": [
+            "myvtex"
+          ],
+          "default": "myvtex"
+        }
+      }
+    },
+    {
+      "url": "https://{storeDomain}",
+      "description": "Store domain.",
+      "variables": {
+        "storeDomain": {
+          "description": "Store domain.",
+          "default": "apiexamples.com"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/api/authenticator/storefront/users": {
+      "post": {
+        "tags": [
+          "Storefront users"
+        ],
+        "summary": "Create storefront user with username",
+        "description": "Registers a new storefront user in VTEX ID using a unique login key (username) as `identifier`.\n\n The created user is not linked to any Organization Unit and does not have storefront permissions.\n\nOnce a storefront user is added, it cannot be edited or removed. If incorrect data is uploaded, create a new username.\r\n\r\n## Permissions\r\n\r\nAny user or [API key](https://developers.vtex.com/docs/guides/authentication-overview#api-keys) must have at least one of the appropriate [License Manager resources](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3) to be able to successfully run this request. Otherwise they will receive a status code `403` error. These are the applicable resources for this endpoint:\r\n\r\n| **Product** | **Category** | **Resource** |\r\n| --------------- | ----------------- | ----------------- |\r\n| VTEX ID | User Management | **Create User** |\r\n\r\nThere are no applicable [predefined roles](https://help.vtex.com/en/tutorial/predefined-roles--jGDurZKJHvHJS13LnO7Dy) for this resource list. You must [create a custom role](https://help.vtex.com/en/tutorial/roles--7HKK5Uau2H6wxE1rH5oRbc#creating-a-role) and add at least one of the resources above in order to use this endpoint.\r\nTo learn more about machine authentication at VTEX, see [Authentication overview](https://developers.vtex.com/docs/guides/authentication-overview#machine-authentication).\r\n\r\n>❗ To prevent integrations from having excessive permissions, consider the [best practices for managing API keys](https://help.vtex.com/en/tutorial/best-practices-api-keys--7b6nD1VMHa49aI5brlOvJm) when assigning License Manager roles to integrations.",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "isLegacyPassword",
+            "in": "query",
+            "description": "Defines whether the storefront user should recover their password via an external service (`true`) or define a new password on first login (`false`, default).",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "identifier",
+                  "identifierType"
+                ],
+                "properties": {
+                  "identifier": {
+                    "type": "string",
+                    "description": "Unique login key (username) for the user. Case-insensitive string (3-70 characters, accepts special characters and whitespace) used for login."
+                  },
+                  "identifierType": {
+                    "type": "string",
+                    "enum": [
+                      "username"
+                    ],
+                    "description": "Type of identifier. Only `username` is supported."
+                  }
+                },
+                "example": {
+                  "identifier": "john.doe_2025",
+                  "identifierType": "username"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "description": "Unique user identifier (GUID).",
+                      "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    }
+                  }
+                },
+                "example": {
+                  "userId": "f0a15a42-f7fc-4b09-a9ab-fabc76d9f332",
+                  "identifier": "john.doe_2025"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid request or identifier type.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid access token."
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions."
+          },
+          "409": {
+            "description": "Conflict - User already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message.",
+                      "example": "User already exists"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "appKey": [],
+            "appToken": []
+          }
+        ]
+      }
+    },
+    "/api/vtexid/pvt/user/info": {
+      "get": {
+        "tags": [
+          "Storefront users"
+        ],
+        "summary": "Get storefront user by identifier",
+        "description": "Fetches a storefront user by their identifier (username or email). The identifier must be provided as a URL-encoded query parameter.\r\n\r\n## Permissions\r\n\r\nAny user or [API key](https://developers.vtex.com/docs/guides/authentication-overview#api-keys) must have at least one of the appropriate [License Manager resources](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3) to be able to successfully run this request. Otherwise they will receive a status code `403` error. These are the applicable resources for this endpoint:\r\n\r\n| **Product** | **Category** | **Resource** |\r\n| --------------- | ----------------- | ----------------- |\r\n| VTEX ID | User Management | **View User** |\r\n\r\nThere are no applicable [predefined roles](https://help.vtex.com/en/tutorial/predefined-roles--jGDurZKJHvHJS13LnO7Dy) for this resource list. You must [create a custom role](https://help.vtex.com/en/tutorial/roles--7HKK5Uau2H6wxE1rH5oRbc#creating-a-role) and add at least one of the resources above in order to use this endpoint.\r\nTo learn more about machine authentication at VTEX, see [Authentication overview](https://developers.vtex.com/docs/guides/authentication-overview#machine-authentication).\r\n\r\n>❗ To prevent integrations from having excessive permissions, consider the [best practices for managing API keys](https://help.vtex.com/en/tutorial/best-practices-api-keys--7b6nD1VMHa49aI5brlOvJm) when assigning License Manager roles to integrations.",
+        "parameters": [
+          {
+            "name": "user",
+            "in": "query",
+            "description": "URL-encoded storefront user identifier (username or email).",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "john.doe_2025"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - User found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Storefront user information.",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "description": "Storefront user unique identifier."
+                    },
+                    "user": {
+                      "type": "string",
+                      "description": "Storefront user email."
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Storefront user full name."
+                    },
+                    "accountId": {
+                      "type": "string",
+                      "description": "VTEX account ID."
+                    },
+                    "accountName": {
+                      "type": "string",
+                      "description": "VTEX VTEX account name."
+                    }
+                  }
+                },
+                "example": {
+                  "userId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                  "user": "john.doe@example.com",
+                  "name": "John Doe",
+                  "accountId": "12345",
+                  "accountName": "mystore"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Not authenticated."
+          }
+        },
+        "security": [
+          {
+            "appKey": [],
+            "appToken": []
+          }
+        ]
+      }
+    },
+    "/api/vtexid/apptoken/login": {
+      "servers": [
+        {
+          "url": "https://{accountName}.{environment}.com.br",
+          "description": "VTEX server URL.",
+          "variables": {
+            "accountName": {
+              "description": "Name of the VTEX account. Used as part of the URL.",
+              "default": "apiexamples"
+            },
+            "environment": {
+              "description": "Environment to use. Used as part of the URL.",
+              "enum": [
+                "vtexcommercestable"
+              ],
+              "default": "vtexcommercestable"
+            }
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Generate authentication token",
+        "description": "Generate a [token](https://developers.vtex.com/vtex-rest-api/docs/getting-started-authentication#user-token) from a given [app key and app token](https://help.vtex.com/en/tutorial/api-keys--2iffYzlvvz4BDMr6WGUtet) pair. You can use this token to authenticate requests to VTEX APIs by sending it as a header named `VtexIdclientAutCookie`. The token's permissions are the same as [defined to the credential pair](https://help.vtex.com/en/tutorial/api-keys--2iffYzlvvz4BDMr6WGUtet#managing-app-key-permissions).\n\r\n\r> Since you are sending the credentials on the request body, there is no need to send authentication headers. \n\r\n\r> It is also possible to make this request using the `https://api.vtexcommercestable.com.br/api/vtexid/apptoken/login?an={accountName}` route, replacing `{accountName}` with your VTEX account name. This is the only case where you need to use the `an` query parameter.\r\n\r\n## Permissions\r\n\r\nThis endpoint does not require [permissions](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3).",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "an",
+            "in": "query",
+            "description": "Name of your VTEX account.",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string",
+              "example": "exampleAccount"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Credentials object, composed of API key and application token.",
+                "required": [
+                  "appkey",
+                  "apptoken"
+                ],
+                "properties": {
+                  "appkey": {
+                    "type": "string",
+                    "description": "API key.",
+                    "example": "vtexappkey-example-YSWQFZ"
+                  },
+                  "apptoken": {
+                    "type": "string",
+                    "description": "Application token corresponding to the API key sent with it.",
+                    "example": "eyJhbGciOiJFUzI1NiIsImtpZCI6IjA1MTZFN0IwMDNFODMxRTg0QkFDOTg2NzBCNUM2QTRERTlBN0RFNkUiLCJ0eXAiOiJqd3QifQ.eyJzdWIiOiJwZWRyby5jb3N0YUB2dGV4LmNvbS5iciIsImFjY291bnQiOiJhcHBsaWFuY2V0aGVtZSIsImF1ZGllbmNlIjoiYWRtaW4iLCJzZXNzIjoiZjU3YjMyMGItMWE3YS00YzlkLWJkNDMtZTE4NDdhYmE1MTE1IiwiZXhwIjoxNjE2NzY3Mjc4LCJ1c2VySWQiOiJmYjU0MmU1MS01NDg4LTRjMzQtOGQxNy1lZDhmY2Y1OTdhOTQiLCJpYXQiOjE2MwerY2ODA4NzgsImlzcyI6InRva2VuLWVtaXR0ZXIiLCJqdGkiOiJmYTI0YWJiOC03Y2E5LTQ3NjUtYmYzNC1kMmvU5YTgzYjYxZmUifQ.23rn-2dEdAAYXJX2exrxDEdbieyKWsVKABeSUNeFWyhz7xRd7d5EcxwiMLjM3bRaBOKrAA9Op7ocn89c45qQ"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "authStatus": {
+                      "type": "string",
+                      "description": "Authentication status."
+                    },
+                    "token": {
+                      "type": "string",
+                      "description": "Authentication token."
+                    },
+                    "expires": {
+                      "type": "integer",
+                      "description": "Token expiration Unix timestamp in seconds."
+                    }
+                  }
+                },
+                "example": {
+                  "authStatus": "Success",
+                  "token": "eyJhbGciOiJFUzI1NiIsImtpZCI6IjFBRjI5MUUwRDY0MERENTlEQTkzRTg0REMxNjQyNjA3ODZEQjY3ODAiLCJ0eXAiOiJqd3QifQ.eyJzdWIiOiJ2dGV4YXBwa2V5LXZ0ZXhoZWxwLVdWQ0FCVCIsImFjY291bnQiOiJwerV4aGVscCIsImF1ZGllbmNlIjoiYWRtaW4iLCJleHAiOjE2Njk3NzA3MzcsInVzZXJJZCI6IjM5MjNhMmUy5khmMTctNGNiYy04YzU3LWQ3OGFkNmUxYTU2NiIsImlhdCI6MTY2OTc0OTEzNywiaXNzIjoidG9rZW4tZW1HgoRlciIsImp0aSI6IjNiNjAxODA2LTExMzEtNDcwYS05MWJjLTVhM2JhOThiYWQyNiJ9.Q7N8MFa1FMJsQUpxBY29oije4aa-Jf29wgLFLl6LUY3Wei3MRUVUMRQWkey6Kug8iFPonZ1L-PaFmwfzSz3TCQ",
+                  "expires": 1669770737
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vtexid/audience/webstore/provider/oauth/exchange": {
+      "servers": [
+        {
+          "url": "https://{accountName}.{environment}.com.br",
+          "description": "VTEX server URL.",
+          "variables": {
+            "accountName": {
+              "description": "Name of the VTEX account. Used as part of the URL.",
+              "default": "apiexamples"
+            },
+            "environment": {
+              "description": "Environment to use. Used as part of the URL.",
+              "enum": [
+                "vtexcommercestable"
+              ],
+              "default": "vtexcommercestable"
+            }
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Exchange OAuth access token for VTEX credential",
+        "description": "If your store uses a headless frontend, you can authenticate users via OAuth and use this endpoint to exchange the OAuth access token for a VTEX authentication token. This VTEX token can be used to authenticate your frontend requests to VTEX APIs.\n\r\n\rLearn more about how to implement [headless authentication](https://developers.vtex.com/docs/guides/headless-authentication) in your store.\r\n\r\n## Permissions\r\n\r\nThis endpoint does not require [permissions](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3).",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "accountName",
+            "in": "path",
+            "required": true,
+            "description": "Name of your VTEX account.",
+            "schema": {
+              "type": "string",
+              "example": "apiexamples"
+            }
+          },
+          {
+            "name": "environment",
+            "in": "path",
+            "required": true,
+            "description": "Environment to be used in the request.",
+            "schema": {
+              "type": "string",
+              "default": "vtexcommercestable"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "providerId",
+                  "accessToken"
+                ],
+                "properties": {
+                  "providerId": {
+                    "type": "string",
+                    "description": "Name of the [OAuth provider](https://developers.vtex.com/docs/guides/login-integration-guide-webstore-oauth2) set up in your Admin panel.",
+                    "example": "custom-oauth-provider"
+                  },
+                  "accessToken": {
+                    "type": "string",
+                    "description": "Access token obtained from your frontend via OAuth integration corresponding with the indicated `providerId`.",
+                    "example": "dsfDShdgfhDFI1NiIsIrtyZCI6IjFBRjI5MUUwRDY0MERENTlEQTkzRTg0REMxNjQyNjA3ODZEQjY3ODAiLCJ0eXAiOiJqd3QifQ.eyJzdWIiOiJ2dGV4YXBwa2V5LXZ0ZXhoZWxwLVdWQ0FCVCIsImFjY291bdg465DATU4GVscCIsImF1MBllbmNlIjoiYWRtaW4iLCJleHAiOjE2Njk3NzA3MzcsInVzZXJJZCI6IjM5MjNhMmUy5khmMTctNGNiYy04YzU3LWQ3OGFkNmUxYTU2NiIsImlhdCI6MTY2OTc0OTEzNywiaXNzIjoidG9rZW4tZW1HgoRlciIsImp0aSI6IjNiNjAxODA2LTExMzEtNDcwYS05MWJjLTVhM2JhOThiYWQyNiJ9.Q7N8MFa1FMJsQUpxBY29oije4aa-654fgjLFLl6LUY3Wei3MRUVUMRQWkey6Kug8iFPonZ1L-PaFmwfzSz3TCQ"
+                  },
+                  "duration": {
+                    "type": "integer",
+                    "description": "Duration of the token that will be returned, in minutes. The maximum value is `120`. The default is `60` when the duration isn't defined.",
+                    "example": 90,
+                    "default": 60
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200 - OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "authToken": {
+                      "type": "string",
+                      "description": "Authentication token. Use this token to authenticate your requests to VTEX APIs."
+                    }
+                  }
+                },
+                "example": {
+                  "authToken": "eyJhbGciOiJFUzI1NiIsIrtyZCI6IjFBRjI5MUUwRDY0MERENTlEQTkzRTg0REMxNjQyNjA3ODZEQjY3ODAiLCJ0eXAiOiJqd3QifQ.eyJzdWIiOiJ2dGV4YXBwa2V5LXZ0ZXhoZWxwLVdWQ0FCVCIsImFjY291bnQiOiJwerV4aGVscCIsImF1MBllbmNlIjoiYWRtaW4iLCJleHAiOjE2Njk3NzA3MzcsInVzZXJJZCI6IjM5MjNhMmUy5khmMTctNGNiYy04YzU3LWQ3OGFkNmUxYTU2NiIsImlhdCI6MTY2OTc0OTEzNywiaXNzIjoidG9rZW4tZW1HgoRlciIsImp0aSI6IjNiNjAxODA2LTExMzEtNDcwYS05MWJjLTVhM2JhOThiYWQyNiJ9.Q7N8MFa1FMJsQUpxBY29oije4aa-Jf463lwgLFLl6LUY3Wei3MRUVUMRQWkey6Kug8iFPonZ1L-PaFmwfzSz3TCQ"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vtexid/credential/validate": {
+      "servers": [
+        {
+          "url": "https://{accountName}.{environment}.com.br",
+          "description": "VTEX server URL.",
+          "variables": {
+            "accountName": {
+              "description": "Name of the VTEX account. Used as part of the URL.",
+              "default": "apiexamples"
+            },
+            "environment": {
+              "description": "Environment to use. Used as part of the URL.",
+              "enum": [
+                "vtexcommercestable"
+              ],
+              "default": "vtexcommercestable"
+            }
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Check authenticated user",
+        "description": "Retrieves information about the user who is currently authenticated in your store, given an user token. If the user is not authenticated, the response for this API will be `401 (Unauthorized)`.\r\n\r\n## Permissions\r\n\r\nThis endpoint does not require [permissions](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3).",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "an",
+            "in": "query",
+            "description": "Name of your VTEX account.",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string",
+              "example": "exampleAccount"
+            }
+          },
+          {
+            "name": "environment",
+            "in": "path",
+            "required": true,
+            "description": "Environment to be used in the request.",
+            "schema": {
+              "type": "string",
+              "default": "vtexcommercestable"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Request body object.",
+                "required": [
+                  "token"
+                ],
+                "properties": {
+                  "token": {
+                    "description": "Value of the `VtexIdclientAutCookie`, [user token](https://developers.vtex.com/docs/guides/api-authentication-using-user-tokens), valid for 24 hours.",
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "authStatus": {
+                      "type": "string",
+                      "description": "Authentication status."
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Unique identifier of the user within VTEX services."
+                    },
+                    "user": {
+                      "type": "string",
+                      "description": "User email."
+                    },
+                    "account": {
+                      "type": "string",
+                      "description": "VTEX account name."
+                    },
+                    "audience": {
+                      "type": "string",
+                      "description": "Type of user."
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "description": "Type of token."
+                    }
+                  }
+                },
+                "example": {
+                  "authStatus": "Success",
+                  "id": "1f6c17e5-06f9-44a9-a459-b3686e03fa9d",
+                  "user": "john@mail.com",
+                  "account": "apiexamples",
+                  "audience": "admin",
+                  "tokenType": "user"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Response body object.",
+                  "properties": {
+                    "authStatus": {
+                      "type": "string",
+                      "description": "Authentication status."
+                    }
+                  }
+                },
+                "example": {
+                  "authStatus": "WrongCredentials"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/vtexid/pub/providers/setup/password/webstore/password": {
+      "servers": [
+        {
+          "url": "https://{accountName}.{environment}.com.br",
+          "description": "VTEX server URL.",
+          "variables": {
+            "accountName": {
+              "description": "Name of the VTEX account. Used as part of the URL.",
+              "default": "apiexamples"
+            },
+            "environment": {
+              "description": "Environment to use. Used as part of the URL.",
+              "enum": [
+                "vtexcommercestable"
+              ],
+              "default": "vtexcommercestable"
+            }
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Enable or disable repeated passwords",
+        "description": "Defines if user passwords can be repeated in your store. \r\n\r\n## Permissions\r\n\r\nAny user or [API key](https://developers.vtex.com/docs/guides/authentication-overview#api-keys) must have at least one of the appropriate [License Manager resources](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3) to be able to successfully run this request. Otherwise they will receive a status code `403` error. These are the applicable resources for this endpoint:\r\n\r\n| **Product** | **Category** | **Resource** |\r\n| --------------- | ----------------- | ----------------- |\r\n| VTEX ID | Identity Providers | **Write Identity Providers** |\r\n\r\nThere are no applicable [predefined roles](https://help.vtex.com/en/tutorial/predefined-roles--jGDurZKJHvHJS13LnO7Dy) for this resource list. You must [create a custom role](https://help.vtex.com/en/tutorial/roles--7HKK5Uau2H6wxE1rH5oRbc#creating-a-role) and add at least one of the resources above in order to use this endpoint.\r\nTo learn more about machine authentication at VTEX, see [Authentication overview](https://developers.vtex.com/docs/guides/authentication-overview#machine-authentication).\r\n\r\n>❗ To prevent integrations from having excessive permissions, consider the [best practices for managing API keys](https://help.vtex.com/en/tutorial/best-practices-api-keys--7b6nD1VMHa49aI5brlOvJm) when assigning License Manager roles to integrations.",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "accountName",
+            "in": "path",
+            "required": true,
+            "description": "Name of your VTEX account.",
+            "schema": {
+              "type": "string",
+              "example": "apiexamples"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isActive": {
+                    "type": "boolean",
+                    "description": "Defines if password access is active (`true`) or not (`false`).",
+                    "example": true
+                  },
+                  "allowRepeated": {
+                    "type": "boolean",
+                    "description": "Defines if passwords can be repeated (`true`) or not (`false`).",
+                    "example": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vtexid/password/expire": {
+      "servers": [
+        {
+          "url": "https://{accountName}.{environment}.com.br",
+          "description": "VTEX server URL.",
+          "variables": {
+            "accountName": {
+              "description": "Name of the VTEX account. Used as part of the URL.",
+              "default": "apiexamples"
+            },
+            "environment": {
+              "description": "Environment to use. Used as part of the URL.",
+              "enum": [
+                "vtexcommercestable"
+              ],
+              "default": "vtexcommercestable"
+            }
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Expire user password",
+        "description": "Expires an user's password in your store.\r\n\r\n## Permissions\r\n\r\nAny user or [API key](https://developers.vtex.com/docs/guides/authentication-overview#api-keys) must have at least one of the appropriate [License Manager resources](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3) to be able to successfully run this request. Otherwise they will receive a status code `403` error. These are the applicable resources for this endpoint:\r\n\r\n| **Product** | **Category** | **Resource** |\r\n| --------------- | ----------------- | ----------------- |\r\n| VTEX ID | User Management | **Expire User Password** |\r\n\r\nThere are no applicable [predefined roles](https://help.vtex.com/en/tutorial/predefined-roles--jGDurZKJHvHJS13LnO7Dy) for this resource list. You must [create a custom role](https://help.vtex.com/en/tutorial/roles--7HKK5Uau2H6wxE1rH5oRbc#creating-a-role) and add at least one of the resources above in order to use this endpoint.\r\nTo learn more about machine authentication at VTEX, see [Authentication overview](https://developers.vtex.com/docs/guides/authentication-overview#machine-authentication).\r\n\r\n>❗ To prevent integrations from having excessive permissions, consider the [best practices for managing API keys](https://help.vtex.com/en/tutorial/best-practices-api-keys--7b6nD1VMHa49aI5brlOvJm) when assigning License Manager roles to integrations.",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "accountName",
+            "in": "path",
+            "required": true,
+            "description": "Name of your VTEX account.",
+            "schema": {
+              "type": "string",
+              "example": "apiexamples"
+            }
+          },
+          {
+            "name": "environment",
+            "in": "path",
+            "required": true,
+            "description": "Environment to be used in the request.",
+            "schema": {
+              "type": "string",
+              "default": "vtexcommercestable"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "User email.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "email@email.com"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vtexid/apikey/{apiKey}/apitoken/renew": {
+      "servers": [
+        {
+          "url": "https://{accountName}.{environment}.com.br",
+          "description": "VTEX server URL.",
+          "variables": {
+            "accountName": {
+              "description": "Name of the VTEX account. Used as part of the URL.",
+              "default": "apiexamples"
+            },
+            "environment": {
+              "description": "Environment to use. Used as part of the URL.",
+              "enum": [
+                "vtexcommercestable"
+              ],
+              "default": "vtexcommercestable"
+            }
+          }
+        }
+      ],
+      "patch": {
+        "tags": [
+          "Token renewal"
+        ],
+        "summary": "Initiate token renewal",
+        "description": "Starts the API token renewal process by generating a new token while keeping the current token active. This ensures a smooth transition without service disruption.\r\n\r\nThe previous token and the new token are both valid until the renewal process is completed by making a request to `PATCH` [Complete token renewal](https://developers.vtex.com/docs/api-reference/vtex-id-api#patch-/api/vtexid/apikey/-apiKey-/apitoken/finish-renewal).\r\n\r\n## Permissions\r\n\r\nAny user or [API key](https://developers.vtex.com/docs/guides/authentication-overview#api-keys) must have at least one of the appropriate [License Manager resources](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3) to be able to successfully run this request. Otherwise they will receive a status code `403` error. These are the applicable resources for this endpoint:\r\n\r\n| **Product** | **Category** | **Resource** |\r\n| --------------- | ----------------- | ----------------- |\r\n| License Manager | API Key Management | **Renew API Token** |\r\n\r\nYou can [create a custom role](https://help.vtex.com/en/tutorial/roles--7HKK5Uau2H6wxE1rH5oRbc#creating-a-role) with that resource or use one of the following [predefined roles](https://help.vtex.com/en/tutorial/predefined-roles--jGDurZKJHvHJS13LnO7Dy):\r\n\r\n| **Role** | **Resource** |\r\n| --------------- | ----------------- |\r\n| User Administrator - RESTRICTED | **Renew API Token** |\r\n\r\n>❗ Assigning a [predefined role](https://help.vtex.com/en/tutorial/predefined-roles--jGDurZKJHvHJS13LnO7Dy) to users or application keys usually grants permission to multiple [License Manager resources](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3). If some of these permissions are not necessary, consider creating a custom role instead. For more information regarding security, see [Best practices for using application keys](https://help.vtex.com/en/tutorial/best-practices-api-keys--7b6nD1VMHa49aI5brlOvJm).\r\n\r\nTo learn more about machine authentication at VTEX, see [Authentication overview](https://developers.vtex.com/docs/guides/authentication-overview#machine-authentication).",
+        "parameters": [
+          {
+            "name": "apiKey",
+            "in": "path",
+            "description": "API Key name.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique identifier of the API token."
+                    },
+                    "keyName": {
+                      "type": "string",
+                      "description": "Name assigned to the API key."
+                    },
+                    "creationDateToken": {
+                      "type": "string",
+                      "description": "ISO 8601 timestamp indicating when the current token was created."
+                    },
+                    "creationDateNewToken": {
+                      "type": "string",
+                      "description": "ISO 8601 timestamp indicating when the new token was generated."
+                    },
+                    "expirationPeriod": {
+                      "type": "number",
+                      "description": "Number of days the token remains valid before expiration."
+                    },
+                    "newToken": {
+                      "type": "string",
+                      "description": "New API token value."
+                    }
+                  }
+                },
+                "example": {
+                  "id": "1f6c17e5-06f9-44a9-a459-b3686e03fa9d",
+                  "keyName": "my-api-key",
+                  "creationDateToken": "2025-02-18T12:00:00Z",
+                  "creationDateNewToken": "2025-02-25T12:00:00Z",
+                  "expirationPeriod": 30,
+                  "newToken": "abc123xyz789"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid API key or API key not owned by tenant"
+          },
+          "409": {
+            "description": "Conflict - Already has a renewed token pending"
+          },
+          "500": {
+            "description": "Unknown server error"
+          }
+        }
+      }
+    },
+    "/api/vtexid/apikey/{apiKey}/apitoken/finish-renewal": {
+      "servers": [
+        {
+          "url": "https://{accountName}.{environment}.com.br",
+          "description": "VTEX server URL.",
+          "variables": {
+            "accountName": {
+              "description": "Name of the VTEX account. Used as part of the URL.",
+              "default": "apiexamples"
+            },
+            "environment": {
+              "description": "Environment to use. Used as part of the URL.",
+              "enum": [
+                "vtexcommercestable"
+              ],
+              "default": "vtexcommercestable"
+            }
+          }
+        }
+      ],
+      "patch": {
+        "tags": [
+          "Token renewal"
+        ],
+        "summary": "Complete token renewal",
+        "description": "Finalizes the API token renewal process, deactivating the old token. After this step, the old token can no longer be used, ensuring security by enforcing a controlled rotation.\r\n\r\n## Permissions\r\n\r\nAny user or [API key](https://developers.vtex.com/docs/guides/authentication-overview#api-keys) must have at least one of the appropriate [License Manager resources](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3) to be able to successfully run this request. Otherwise they will receive a status code `403` error. These are the applicable resources for this endpoint:\r\n\r\n| **Product** | **Category** | **Resource** |\r\n| --------------- | ----------------- | ----------------- |\r\n| License Manager | API Key Management | **Renew API Token** |\r\n\r\n You can [create a custom role](https://help.vtex.com/en/tutorial/roles--7HKK5Uau2H6wxE1rH5oRbc#creating-a-role) with that resource or use one of the following [predefined roles](https://help.vtex.com/en/tutorial/predefined-roles--jGDurZKJHvHJS13LnO7Dy):\r\n\r\n| **Role** | **Resource** |\r\n| --------------- | ----------------- |\r\n| User Administrator - RESTRICTED | **Renew API Token** |\r\n\r\n>❗ Assigning a [predefined role](https://help.vtex.com/en/tutorial/predefined-roles--jGDurZKJHvHJS13LnO7Dy) to users or application keys usually grants permission to multiple [License Manager resources](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3). If some of these permissions are not necessary, consider creating a custom role instead. For more information regarding security, see [Best practices for using application keys](https://help.vtex.com/en/tutorial/best-practices-api-keys--7b6nD1VMHa49aI5brlOvJm).\r\n\r\nTo learn more about machine authentication at VTEX, see [Authentication overview](https://developers.vtex.com/docs/guides/authentication-overview#machine-authentication).",
+        "parameters": [
+          {
+            "name": "apiKey",
+            "in": "path",
+            "description": "API Key name.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique identifier of the API token."
+                    },
+                    "creationDateToken": {
+                      "type": "string",
+                      "description": "ISO 8601 timestamp indicating when the current token was created."
+                    },
+                    "creationDateNewToken": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Creation date of the new token. Always `null` after the token creation process is completed."
+                    }
+                  }
+                },
+                "example": {
+                  "id": "1f6c17e5-06f9-44a9-a459-b3686e03fa9d",
+                  "creationDateToken": "2025-02-18T15:30:00Z",
+                  "creationDateNewToken": null
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid API key or API key not owned by tenant"
+          },
+          "404": {
+            "description": "No renewed API token was found"
+          },
+          "500": {
+            "description": "Unknown server error"
+          }
+        }
+      }
+    },
+    "/api/vtexid/pvt/user/id": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get user ID by email",
+        "description": "Retrieves the unique user ID for a given email address.\r\n\r\n## Permissions\r\n\r\nThis endpoint does not require [License Manager resources](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3). However, it does require a valid user token (`VtexIdclientAutCookie`) to be included in the request headers.\r\n\r\nTo learn more about user authentication at VTEX, see [Authentication overview](https://developers.vtex.com/docs/guides/authentication-overview#user-authentication).",
+        "parameters": [
+          {
+            "name": "usuario",
+            "in": "query",
+            "description": "User email address.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "URI-encoded user email.",
+              "example": "john%40mail.com"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "description": "User ID.",
+                  "example": "1f6c17e5-06f9-44a9-a459-b3686e03fa9d",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Invalid or missing VtexIdclientAutCookie."
+          }
+        },
+        "security": [
+          {
+            "VtexIdclientAutCookie": []
+          }
+        ]
+      }
+    },
+    "/api/vtexid/pub/authentication/start": {
+      "servers": [
+        {
+          "url": "https://{storeDomain}",
+          "description": "Store domain.",
+          "variables": {
+            "storeDomain": {
+              "description": "Store domain.",
+              "default": "apiexamples.com"
+            }
+          }
+        },
+        {
+          "url": "https://{accountName}.{environment}.com",
+          "description": "VTEX server URL.",
+          "variables": {
+            "accountName": {
+              "description": "Name of the VTEX account. Used as part of the URL.",
+              "default": "apiexamples"
+            },
+            "environment": {
+              "description": "Environment to use. Used as part of the URL.",
+              "enum": [
+                "myvtex"
+              ],
+              "default": "myvtex"
+            }
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Refresh token (Headless)"
+        ],
+        "summary": "Start authentication",
+        "description": "Starts the authentication flow for a user in your store. This endpoint returns an authentication token valid for 24 hours.\r\n\r\n## Permissions\r\n\r\nThis endpoint does not require [permissions](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3).",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "description": "Account name.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "accountName"
+            }
+          },
+          {
+            "name": "fingerprint",
+            "in": "query",
+            "description": "Optional device fingerprint for enhanced security. Generated client-side using JavaScript libraries that collect anonymized device and browser parameters to create a unique identifier. When submitted in this request, it must later be provided when making a request to [refresh token](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/vtexid/refreshtoken/webstore).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "12345"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "authenticationToken": {
+                      "type": "string",
+                      "description": "Authentication token provided to the user, valid for 24 hours."
+                    },
+                    "oauthProviders": {
+                      "type": "array",
+                      "description": "List of available OAuth providers.",
+                      "items": {
+                        "type": "object",
+                        "description": "OAuth provider information.",
+                        "properties": {
+                          "providerName": {
+                            "type": "string",
+                            "description": "Name of the OAuth provider."
+                          },
+                          "className": {
+                            "type": "string",
+                            "description": "Class name associated with the provider."
+                          },
+                          "expectedContext": {
+                            "type": "array",
+                            "description": "Additional context expected by the provider.",
+                            "items": {
+                              "type": "string",
+                              "description": "Additional context."
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "showClassicAuthentication": {
+                      "type": "boolean",
+                      "description": "Indicates whether classic authentication is enabled (`true`) or not (`false`)."
+                    },
+                    "showAccessKeyAuthentication": {
+                      "type": "boolean",
+                      "description": "Indicates whether access key authentication is enabled (`true`) or not (`false`)."
+                    },
+                    "showPasskeyAuthentication": {
+                      "type": "boolean",
+                      "description": "Indicates whether passkey authentication is enabled (`true`) or not (`false`)."
+                    },
+                    "authCookie": {
+                      "type": "string",
+                      "description": "Authentication cookie if available.",
+                      "nullable": true
+                    },
+                    "isAuthenticated": {
+                      "type": "boolean",
+                      "description": "Indicates whether the user is authenticated."
+                    },
+                    "selectedProvider": {
+                      "type": "string",
+                      "description": "Currently selected authentication provider, if any.",
+                      "nullable": true
+                    },
+                    "samlProviders": {
+                      "type": "array",
+                      "description": "List of available SAML providers.",
+                      "items": {
+                        "type": "string",
+                        "description": "SAML provider."
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "authenticationToken": "C17BCD635B637E66BF2BBE07CEED0B1B7425387FB8D6E42FE68EBCE7A49193F2",
+                  "oauthProviders": [
+                    {
+                      "providerName": "Google",
+                      "className": "google-plus",
+                      "expectedContext": []
+                    },
+                    {
+                      "providerName": "Facebook",
+                      "className": "facebook",
+                      "expectedContext": []
+                    }
+                  ],
+                  "showClassicAuthentication": true,
+                  "showAccessKeyAuthentication": true,
+                  "showPasskeyAuthentication": false,
+                  "authCookie": null,
+                  "isAuthenticated": false,
+                  "selectedProvider": null,
+                  "samlProviders": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vtexid/pub/authentication/accesskey/send": {
+      "servers": [
+        {
+          "url": "https://{storeDomain}",
+          "description": "Store domain.",
+          "variables": {
+            "storeDomain": {
+              "description": "Store domain.",
+              "default": "apiexamples.com"
+            }
+          }
+        },
+        {
+          "url": "https://{accountName}.{environment}.com",
+          "description": "VTEX server URL.",
+          "variables": {
+            "accountName": {
+              "description": "Name of the VTEX account. Used as part of the URL.",
+              "default": "apiexamples"
+            },
+            "environment": {
+              "description": "Environment to use. Used as part of the URL.",
+              "enum": [
+                "myvtex"
+              ],
+              "default": "myvtex"
+            }
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Refresh token (Headless)"
+        ],
+        "summary": "Send access key",
+        "description": "Sends an access key to the user's email address, if the response is empty with 200 OK. The access key is used to authenticate the user in your store.\r\n\r\n## Permissions\r\n\r\nThis endpoint does not require [permissions](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3).",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "User email.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "jane@mail.com"
+            }
+          },
+          {
+            "name": "_vss",
+            "in": "cookie",
+            "description": "Authentication token obtained in the [Start authentication](https://developers.vtex.com/docs/api-reference/vtex-id-api#get-/api/vtexid/pub/authentication/start) request.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "C17BCD635B637E66BF2BBE07CEED0B1B7425387FB8D6E42FE68EBCE7A49193F2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "authStatus": {
+                      "type": "string",
+                      "description": "Error message, which can be `InvalidEmail` (when the email informed is not valid) or `InvalidToken` (when the token is malformed, expired, or has an invalid signature)."
+                    }
+                  }
+                },
+                "example": {
+                  "authStatus": "InvalidEmail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vtexid/pub/authentication/accesskey/validate": {
+      "servers": [
+        {
+          "url": "https://{storeDomain}",
+          "description": "Store domain.",
+          "variables": {
+            "storeDomain": {
+              "description": "Store domain.",
+              "default": "apiexamples.com"
+            }
+          }
+        },
+        {
+          "url": "https://{accountName}.{environment}.com",
+          "description": "VTEX server URL.",
+          "variables": {
+            "accountName": {
+              "description": "Name of the VTEX account. Used as part of the URL.",
+              "default": "apiexamples"
+            },
+            "environment": {
+              "description": "Environment to use. Used as part of the URL.",
+              "enum": [
+                "myvtex"
+              ],
+              "default": "myvtex"
+            }
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Refresh token (Headless)"
+        ],
+        "summary": "Validate session",
+        "description": "Validates the user session using the access key sent to the user through the [Send access key](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/vtexid/pub/authentication/accesskey/send) endpoint.\r\n\r\nThe refresh token (`vid_rt`) is returned in the `Set-Cookie` header. This token is required for the [Refresh token](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/vtexid/refreshtoken/webstore) request.\r\n\r\n## Permissions\r\n\r\nThis endpoint does not require [permissions](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3).",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "_vss",
+            "in": "cookie",
+            "description": "Authentication token obtained in the [Start authentication](https://developers.vtex.com/docs/api-reference/vtex-id-api#get-/api/vtexid/pub/authentication/start) request.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "C17BCD635B637E66BF2BBE07CEED0B1B7425387FB8D6E42FE68EBCE7A49193F2"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "accessKey": {
+                    "type": "string",
+                    "description": "Access key sent to the user through the [Send access key](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/vtexid/pub/authentication/accesskey/send) endpoint."
+                  },
+                  "login": {
+                    "type": "string",
+                    "description": "User email."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Refresh token.",
+                "schema": {
+                  "type": "string",
+                  "example": "vid_rt=QiEOQKuzdRjukvSnsn7F8h1wwkrqq8wWlkk7bXA5LSbTHkbKbYEfDJ7MGb6_pllGWd1VQ-JxQI7UDLvYrCUH9o7i1rOSeSG8zJewZw; expires=Thu, 27 Mar 2025 10:22:49 GMT; domain=apiexamples.myvtex.com; path=/api/vtexid/refreshtoken/webstore; secure; samesite=strict; httponly"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Validate session response object.",
+                  "properties": {
+                    "authStatus": {
+                      "type": "string",
+                      "description": "Authentication status of the user, which can be: \n\n* `Success`: when authentication is completed successfully.\n* `InvalidEmail`: When the email informed is not valid.\n* `InvalidToken`: When the token is malformed, expired, or has an invalid signature.\n* `WrongCredentials`: When the informed credentials are not valid.",
+                      "enum": [
+                        "Success",
+                        "InvalidEmail",
+                        "InvalidToken",
+                        "WrongCredentials"
+                      ]
+                    },
+                    "promptMFA": {
+                      "type": "boolean",
+                      "description": "Indicates whether multi-factor authentication is required."
+                    },
+                    "lastAttemptAvailable": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "Last authentication attempt available."
+                    },
+                    "clientToken": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Client token."
+                    },
+                    "authCookie": {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "Authentication cookie.",
+                      "properties": {
+                        "Name": {
+                          "type": "string",
+                          "description": "Name of the cookie."
+                        },
+                        "Value": {
+                          "type": "string",
+                          "description": "Value of the cookie."
+                        }
+                      }
+                    },
+                    "accountAuthCookie": {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "Cookie specific to account authentication.",
+                      "properties": {
+                        "Name": {
+                          "type": "string",
+                          "description": "Name of the cookie."
+                        },
+                        "Value": {
+                          "type": "string",
+                          "description": "Value of the cookie."
+                        }
+                      }
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "description": "Time in seconds until authentication expires."
+                    },
+                    "userId": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Unique identifier for the authenticated user."
+                    },
+                    "phoneNumber": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "User's phone number associated with the account."
+                    },
+                    "scope": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Authentication scope granted."
+                    }
+                  }
+                },
+                "example": {
+                  "authStatus": "Success",
+                  "promptMFA": false,
+                  "lastAttemptAvailable": null,
+                  "clientToken": null,
+                  "authCookie": {
+                    "Name": "VtexIdclientAutCookie_apiexamples",
+                    "Value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                  },
+                  "accountAuthCookie": {
+                    "Name": "VtexIdclientAutCookie_a8b27fb4-6516-4cc0-82b6-a5f2b011e6e2",
+                    "Value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                  },
+                  "expiresIn": 86399,
+                  "userId": "1f6c17e5-06f9-44a9-a459-b3686e03fa9d",
+                  "phoneNumber": null,
+                  "scope": null
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Validate session response object.",
+                  "properties": {
+                    "authStatus": {
+                      "type": "string",
+                      "description": "Authentication status of the user, which can be: \n\n* `Success`: when authentication is completed successfully.\n* `InvalidEmail`: When the email informed is not valid.\n* `InvalidToken`: When the token is malformed, expired, or has an invalid signature.\n* `WrongCredentials`: When the informed credentials are not valid.",
+                      "enum": [
+                        "Success",
+                        "InvalidEmail",
+                        "InvalidToken",
+                        "WrongCredentials"
+                      ]
+                    },
+                    "promptMFA": {
+                      "type": "boolean",
+                      "description": "Indicates whether multi-factor authentication is required."
+                    },
+                    "lastAttemptAvailable": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "Last authentication attempt available."
+                    },
+                    "clientToken": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Client token."
+                    },
+                    "authCookie": {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "Authentication cookie.",
+                      "properties": {
+                        "Name": {
+                          "type": "string",
+                          "description": "Name of the cookie."
+                        },
+                        "Value": {
+                          "type": "string",
+                          "description": "Value of the cookie."
+                        }
+                      }
+                    },
+                    "accountAuthCookie": {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "Cookie specific to account authentication.",
+                      "properties": {
+                        "Name": {
+                          "type": "string",
+                          "description": "Name of the cookie."
+                        },
+                        "Value": {
+                          "type": "string",
+                          "description": "Value of the cookie."
+                        }
+                      }
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "description": "Time in seconds until authentication expires."
+                    },
+                    "userId": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Unique identifier for the authenticated user."
+                    },
+                    "phoneNumber": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "User's phone number associated with the account."
+                    },
+                    "scope": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Authentication scope granted."
+                    }
+                  }
+                },
+                "example": {
+                  "authStatus": "InvalidEmail",
+                  "promptMFA": false,
+                  "lastAttemptAvailable": null,
+                  "clientToken": null,
+                  "authCookie": null,
+                  "accountAuthCookie": null,
+                  "expiresIn": 0,
+                  "userId": null,
+                  "phoneNumber": null,
+                  "scope": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vtexid/refreshtoken/webstore": {
+      "servers": [
+        {
+          "url": "https://{storeDomain}",
+          "description": "Store domain.",
+          "variables": {
+            "storeDomain": {
+              "description": "Store domain.",
+              "default": "apiexamples.com"
+            }
+          }
+        },
+        {
+          "url": "https://{accountName}.{environment}.com",
+          "description": "VTEX server URL.",
+          "variables": {
+            "accountName": {
+              "description": "Name of the VTEX account. Used as part of the URL.",
+              "default": "apiexamples"
+            },
+            "environment": {
+              "description": "Environment to use. Used as part of the URL.",
+              "enum": [
+                "myvtex"
+              ],
+              "default": "myvtex"
+            }
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Refresh token (Headless)"
+        ],
+        "summary": "Refresh token",
+        "description": "Returns a valid refresh token and authentication token (`VtexIdclientAutCookie`) as cookies.\r\n\r\n## Permissions\r\n\r\nThis endpoint does not require [permissions](https://help.vtex.com/en/tutorial/license-manager-resources--3q6ztrC8YynQf6rdc6euk3).",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "Type of the content being sent.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          },
+          {
+            "name": "Host",
+            "in": "header",
+            "description": "Host address.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "apiexamples.myvtex.com"
+            }
+          },
+          {
+            "name": "vid_rt",
+            "in": "cookie",
+            "description": "Refresh token obtained in the [Validate session](https://developers.vtex.com/docs/api-reference/vtex-id-api#post-/api/vtexid/pub/authentication/accesskey/validate) request.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "QiEOQKuzdRjukvSnsn7F8h1wwkrqq8wWlkk7bXA5LSbTHkbKbYEfDJ7MGb6_pllGWd1VQ-JxQI7UDLvYrCUH9o7i1rOSeSG8zJewZw"
+            }
+          },
+          {
+            "name": "VtexIdclientAutCookie_{{accountId}}",
+            "in": "cookie",
+            "description": "Account auth cookie.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+            }
+          },
+          {
+            "name": "VtexIdclientAutCookie_{{accountName}}",
+            "in": "cookie",
+            "description": "Auth cookie.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fingerprint": {
+                    "type": "string",
+                    "description": "Optional device fingerprint for enhanced security. Generated client-side using JavaScript libraries that collect anonymized device and browser parameters to create a unique identifier. Must remain consistent with the fingerprint provided during [initial authentication](https://developers.vtex.com/docs/api-reference/vtex-id-api#get-/api/vtexid/pub/authentication/start), if previously submitted.",
+                    "nullable": true
+                  }
+                }
+              },
+              "example": {
+                "fingerprint": "12345"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "description": "Valid refresh token.",
+                  "example": "vid_rt=QiEOQKuzdRjukvSnsn7F8h1wwkrqq8wWlkk7bXA5LSbTHkbKbYEfDJ7MGb6_pllGWd1VQ-JxQI7UDLvYrCUH9o7i1rOSeSG8zJewZw"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Refresh token response object.",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "Status of the operation. Possible values: \r\n- `Success`: Token refresh was successful. \r\n- `InvalidSession`: The session is invalid or expired. \r\n- `InvalidToken`: The token is invalid. \r\n- `InvalidEmail`: The email associated with the token is invalid. \r\n- `InvalidScope`: The scope is invalid.",
+                      "enum": [
+                        "Success",
+                        "InvalidSession",
+                        "InvalidToken",
+                        "InvalidEmail",
+                        "InvalidScope"
+                      ]
+                    },
+                    "userId": {
+                      "type": "string",
+                      "description": "Unique identifier assigned to the authenticated user."
+                    },
+                    "refreshAfter": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "The timestamp indicating when the session should be refreshed, in ISO 8601 format (`YYYY-MM-DDTHH:mm:ss±HH:MM`)."
+                    }
+                  }
+                },
+                "example": {
+                  "status": "Success",
+                  "userId": "1f6c17e5-06f9-44a9-a459-b3686e03fa9d",
+                  "refreshAfter": "2025-03-27T02:36:30+00:00"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "Content-Type": {
+        "name": "Content-Type",
+        "in": "header",
+        "description": "Type of the content being sent.",
+        "required": true,
+        "style": "simple",
+        "schema": {
+          "type": "string",
+          "example": "application/json"
+        }
+      },
+      "Accept": {
+        "name": "Accept",
+        "in": "header",
+        "description": "HTTP Client Negotiation _Accept_ Header. Indicates the types of responses the client can understand.",
+        "required": true,
+        "style": "simple",
+        "schema": {
+          "type": "string",
+          "example": "application/json"
+        }
+      },
+      "an": {
+        "name": "an",
+        "in": "query",
+        "description": "Name of your VTEX account.",
+        "required": false,
+        "style": "form",
+        "schema": {
+          "type": "string",
+          "example": "exampleAccount"
+        }
+      },
+      "accountName": {
+        "name": "accountName",
+        "in": "path",
+        "required": true,
+        "description": "Name of your VTEX account.",
+        "schema": {
+          "type": "string",
+          "example": "apiexamples"
+        }
+      },
+      "environment": {
+        "name": "environment",
+        "in": "path",
+        "required": true,
+        "description": "Environment to be used in the request.",
+        "schema": {
+          "type": "string",
+          "default": "vtexcommercestable"
+        }
+      },
+      "apiKey": {
+        "name": "apiKey",
+        "in": "path",
+        "description": "API Key name.",
+        "required": true,
+        "style": "simple",
+        "schema": {
+          "type": "string",
+          "example": "application/json"
+        }
+      }
+    },
+    "schemas": {
+      "credentials": {
+        "type": "object",
+        "description": "Credentials object, composed of API key and application token.",
+        "required": [
+          "appkey",
+          "apptoken"
+        ],
+        "properties": {
+          "appkey": {
+            "type": "string",
+            "description": "API key.",
+            "example": "vtexappkey-example-YSWQFZ"
+          },
+          "apptoken": {
+            "type": "string",
+            "description": "Application token corresponding to the API key sent with it.",
+            "example": "eyJhbGciOiJFUzI1NiIsImtpZCI6IjA1MTZFN0IwMDNFODMxRTg0QkFDOTg2NzBCNUM2QTRERTlBN0RFNkUiLCJ0eXAiOiJqd3QifQ.eyJzdWIiOiJwZWRyby5jb3N0YUB2dGV4LmNvbS5iciIsImFjY291bnQiOiJhcHBsaWFuY2V0aGVtZSIsImF1ZGllbmNlIjoiYWRtaW4iLCJzZXNzIjoiZjU3YjMyMGItMWE3YS00YzlkLWJkNDMtZTE4NDdhYmE1MTE1IiwiZXhwIjoxNjE2NzY3Mjc4LCJ1c2VySWQiOiJmYjU0MmU1MS01NDg4LTRjMzQtOGQxNy1lZDhmY2Y1OTdhOTQiLCJpYXQiOjE2MwerY2ODA4NzgsImlzcyI6InRva2VuLWVtaXR0ZXIiLCJqdGkiOiJmYTI0YWJiOC03Y2E5LTQ3NjUtYmYzNC1kMmvU5YTgzYjYxZmUifQ.23rn-2dEdAAYXJX2exrxDEdbieyKWsVKABeSUNeFWyhz7xRd7d5EcxwiMLjM3bRaBOKrAA9Op7ocn89c45qQ"
+          }
+        }
+      },
+      "validateSessionResponse": {
+        "type": "object",
+        "description": "Validate session response object.",
+        "properties": {
+          "authStatus": {
+            "type": "string",
+            "description": "Authentication status of the user, which can be: \n\n* `Success`: when authentication is completed successfully.\n* `InvalidEmail`: When the email informed is not valid.\n* `InvalidToken`: When the token is malformed, expired, or has an invalid signature.\n* `WrongCredentials`: When the informed credentials are not valid.",
+            "enum": [
+              "Success",
+              "InvalidEmail",
+              "InvalidToken",
+              "WrongCredentials"
+            ]
+          },
+          "promptMFA": {
+            "type": "boolean",
+            "description": "Indicates whether multi-factor authentication is required."
+          },
+          "lastAttemptAvailable": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Last authentication attempt available."
+          },
+          "clientToken": {
+            "type": "string",
+            "nullable": true,
+            "description": "Client token."
+          },
+          "authCookie": {
+            "type": "object",
+            "nullable": true,
+            "description": "Authentication cookie.",
+            "properties": {
+              "Name": {
+                "type": "string",
+                "description": "Name of the cookie."
+              },
+              "Value": {
+                "type": "string",
+                "description": "Value of the cookie."
+              }
+            }
+          },
+          "accountAuthCookie": {
+            "type": "object",
+            "nullable": true,
+            "description": "Cookie specific to account authentication.",
+            "properties": {
+              "Name": {
+                "type": "string",
+                "description": "Name of the cookie."
+              },
+              "Value": {
+                "type": "string",
+                "description": "Value of the cookie."
+              }
+            }
+          },
+          "expiresIn": {
+            "type": "integer",
+            "description": "Time in seconds until authentication expires."
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Unique identifier for the authenticated user."
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "User's phone number associated with the account."
+          },
+          "scope": {
+            "type": "string",
+            "nullable": true,
+            "description": "Authentication scope granted."
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "appKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-VTEX-API-AppKey",
+        "description": "Unique identifier of the [API key](https://developers.vtex.com/docs/guides/api-authentication-using-api-keys)."
+      },
+      "appToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-VTEX-API-AppToken",
+        "description": "Secret token of the [API key](https://developers.vtex.com/docs/guides/api-authentication-using-api-keys)."
+      },
+      "VtexIdclientAutCookie": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "VtexIdclientAutCookie",
+        "description": "[User token](https://developers.vtex.com/docs/guides/api-authentication-using-user-tokens), valid for 24 hours."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Authentication"
+    },
+    {
+      "name": "Token renewal"
+    },
+    {
+      "name": "Refresh token (Headless)"
+    },
+    {
+      "name": "Storefront users"
+    }
+  ],
+  "security": [
+    {
+      "appKey": [],
+      "appToken": []
+    },
+    {
+      "VtexIdclientAutCookie": []
+    }
+  ]
+}

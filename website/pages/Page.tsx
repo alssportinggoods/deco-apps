@@ -18,7 +18,6 @@ import { Component, JSX } from "preact";
 import ErrorPageComponent from "../../utils/defaultErrorPage.tsx";
 import { DefaultImageQualityContext } from "../components/Image.tsx";
 import OneDollarStats from "../components/OneDollarStats.tsx";
-import Stats from "../components/Stats.tsx";
 import Events from "../components/Events.tsx";
 import { SEOSection } from "../components/Seo.tsx";
 import LiveControls from "../components/_Controls.tsx";
@@ -26,22 +25,12 @@ import { AppContext } from "../mod.ts";
 
 const noIndexedDomains = ["decocdn.com", "deco.site", "deno.dev"];
 
-const ONEDOLLAR_ENABLED = Deno.env.get("ONEDOLLAR_ENABLED") !== "false";
+const ONEDOLLAR_ENABLED = Deno.env.get("ONEDOLLAR_ENABLED") === "true";
 const ONEDOLLAR_COLLECTOR = Deno.env.get("ONEDOLLAR_COLLECTOR");
 const ONEDOLLAR_STATIC_SCRIPT = Deno.env.get("ONEDOLLAR_STATIC_SCRIPT");
 
-// Deco Analytics, gated the same way its predecessor is, for the same reason: enabling a
-// collector is a fleet decision, not something to configure per site in the CMS.
-//
-// ON BY DEFAULT, like ONEDOLLAR_ENABLED: set "false" to turn it off. The collector drops
-// events from a host it has no registration for, so a site collects once it is registered.
-const DECO_ANALYTICS_ENABLED =
-  Deno.env.get("DECO_ANALYTICS_ENABLED") !== "false";
-// Empty means same-origin, which is the first-party path and the default we want. Set it
-// only for a site that is not behind our CDN.
-const DECO_ANALYTICS_ORIGIN = Deno.env.get("DECO_ANALYTICS_ORIGIN") ?? "";
-// Only for a site we do not host. Public by construction — it ships in the script tag.
-const DECO_ANALYTICS_KEY = Deno.env.get("DECO_ANALYTICS_KEY");
+// als fork: Deco Analytics (components/Stats.tsx) is not rendered here. The site loads
+// /_dq/a.js itself, only after the shopper's cookie consent.
 
 /**
  * @title Sections
@@ -161,17 +150,6 @@ function Page(
             collectorAddress={ONEDOLLAR_COLLECTOR}
             staticScriptUrl={ONEDOLLAR_STATIC_SCRIPT}
           />
-        )}
-        {
-          /*
-          Deliberately INDEPENDENT of the gate above, so both can run at once. Comparing two
-          collectors on the same traffic is the only way to know whether the new one agrees
-          with the incumbent, and that comparison is the point of the migration — making this
-          an either/or would force the switch to be a leap.
-        */
-        }
-        {DECO_ANALYTICS_ENABLED && (
-          <Stats origin={DECO_ANALYTICS_ORIGIN} siteKey={DECO_ANALYTICS_KEY} />
         )}
         {sections?.map(renderSection)}
       </ErrorBoundary>

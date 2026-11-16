@@ -8,9 +8,21 @@ const mutation =
 
 interface Props {
   /**
+   * The email of the user to update the newsletter opt in.
+   */
+  email: string;
+  /**
    * If true, the user will be subscribed to the newsletter.
    */
   subscribe: boolean;
+  /**
+   * Name of the user to update the newsletter opt in.
+   */
+  name?: string;
+  /**
+   * Phone of the user to update the newsletter opt in.
+   */
+  phone?: string;
 }
 
 /**
@@ -23,19 +35,29 @@ async function loader(
   ctx: AppContext,
 ): Promise<{ subscribed: boolean }> {
   const { io } = ctx;
-  const { cookie, payload } = parseCookie(req.headers, ctx.account);
+  const { cookie } = parseCookie(req.headers, ctx.account);
 
-  if (!payload?.sub || !payload?.userId) {
-    throw new Error("User cookie is invalid");
-  }
-
-  await io.query<unknown, { email: string; isNewsletterOptIn: boolean }>(
+  await io.query<
+    unknown,
+    {
+      email: string;
+      isNewsletterOptIn: boolean;
+      fields?: {
+        name?: string;
+        phone?: string;
+      };
+    }
+  >(
     {
       query: mutation,
       operationName: "SubscribeNewsletter",
       variables: {
-        email: payload.sub,
+        email: props.email,
         isNewsletterOptIn: props.subscribe,
+        fields: {
+          name: props.name,
+          phone: props.phone,
+        },
       },
     },
     { headers: { cookie } },

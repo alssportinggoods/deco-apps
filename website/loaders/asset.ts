@@ -1,6 +1,24 @@
-import { forbidden } from "@deco/deco";
-import { fetchSafe, STALE } from "../../utils/fetch.ts";
+import { fetch, forbidden } from "@deco/deco";
+import {
+  type DecoRequestInit,
+  retryExceptionOr500,
+  STALE,
+} from "../../utils/fetch.ts";
+import { HttpError } from "../../utils/http.ts";
 import { AppContext } from "../mod.ts";
+import {
+  allowlist,
+  fetchPublicUrl,
+  parsePublicUrl,
+} from "../utils/publicUrl.ts";
+
+const httpErrorResponse = (error: unknown) => {
+  if (!(error instanceof HttpError)) throw error;
+  return new Response(error.message, { status: error.status });
+};
+
+const fetchWithRetry = (input: URL, init: DecoRequestInit) =>
+  retryExceptionOr500.execute(() => fetch(input, init));
 
 interface Props {
   /**
@@ -14,26 +32,20 @@ const loader = async (
   request: Request,
   ctx: AppContext,
 ): Promise<Response> => {
-  const url = new URL(props.src);
-
   if (ctx.disableProxy) {
     return new Response("Proxy disabled", { status: 403 });
   }
 
-  if (
-    ctx.whitelistPatterns &&
-    ctx.whitelistPatterns.length > 0 &&
-    !ctx.whitelistPatterns.some((pattern) => pattern.test(url))
-  ) {
-    return new Response("Proxy disabled for this source", { status: 403 });
+  let url: URL;
+  try {
+    url = parsePublicUrl(props.src);
+  } catch (error) {
+    return httpErrorResponse(error);
   }
 
-  // Whitelist allowed protocols
-  const allowedProtocols = ["https:", "http:"];
-  if (!allowedProtocols.includes(url.protocol)) {
-    forbidden({
-      message: "Only HTTP and HTTPS protocols are allowed",
-    });
+  const allowUrl = allowlist(ctx.whitelistPatterns);
+  if (allowUrl && !allowUrl(url)) {
+    return new Response("Proxy disabled for this source", { status: 403 });
   }
 
   // Some origins (notably fonts.gstatic.com, which declares
@@ -50,10 +62,21 @@ const loader = async (
     }
   }
 
-  const original = await fetchSafe(url.href, {
-    ...STALE,
-    headers: forwardedHeaders,
-  });
+  let original: Response;
+  try {
+    original = await fetchPublicUrl(
+      url,
+      { ...STALE, headers: forwardedHeaders },
+      { fetcher: fetchWithRetry, allowUrl },
+    );
+  } catch (error) {
+    return httpErrorResponse(error);
+  }
+
+  if (!original.ok) {
+    await original.body?.cancel();
+    throw new HttpError(original.status);
+  }
   const response = new Response(original.body, original);
 
   // Check if the request's Accept header includes "text/html"

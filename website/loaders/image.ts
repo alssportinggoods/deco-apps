@@ -1,5 +1,6 @@
 import { HttpError } from "../../utils/http.ts";
 import { Params as Props } from "../utils/image/engine.ts";
+import { allowlist, parsePublicUrl } from "../utils/publicUrl.ts";
 import { engine as cloudflare } from "../utils/image/engines/cloudflare/engine.ts";
 import { engine as deco } from "../utils/image/engines/deco/engine.ts";
 import { engine as passThrough } from "../utils/image/engines/passThrough/engine.ts";
@@ -63,17 +64,16 @@ const handler = async (
     const preferredMediaType = acceptMediaType(req);
     const params = parseParams(props);
 
-    if (
-      ctx.whitelistPatterns &&
-      ctx.whitelistPatterns.length > 0 &&
-      !ctx.whitelistPatterns.some((pattern) => pattern.test(params.src))
-    ) {
+    const allowUrl = allowlist(ctx.whitelistPatterns);
+    if (allowUrl && !allowUrl(params.src)) {
       return new Response("Proxy disabled for this source", { status: 403 });
     }
 
     const engine = ENGINES.find((e) => e.accepts(params.src)) ?? passThrough;
 
-    const response = await engine.resolve(params, preferredMediaType, req);
+    const response = await engine.resolve(params, preferredMediaType, req, {
+      allowUrl,
+    });
 
     response.headers.set("x-img-engine", engine.name);
     response.headers.set("x-cache", "MISS");
@@ -85,22 +85,34 @@ const handler = async (
 
     return response;
   } catch (error) {
-    const errorObj = error as { message?: string; status: number };
     console.error(error);
-
-    return new Response(errorObj.message ?? Deno.inspect(error), {
-      status: error instanceof HttpError ? errorObj.status : 500,
-      headers: {
-        "cache-control": "no-cache, no-store",
-        "vary": "Accept",
-      },
-    });
+    return errorResponse(error);
   }
+};
+
+const errorResponse = (error: unknown) => {
+  const isHttpError = error instanceof HttpError;
+
+  return new Response(isHttpError ? error.message : "Internal error", {
+    status: isHttpError ? error.status : 500,
+    headers: {
+      "cache-control": "no-cache, no-store",
+      "vary": "Accept",
+    },
+  });
 };
 
 const cache = typeof caches !== "undefined" ? await caches.open(PATH) : null;
 
 const loader: typeof handler = async (props, req, ctx) => {
+  // Validate before the cache lookup so entries cached for a disallowed
+  // source are never served.
+  try {
+    parsePublicUrl(props.src);
+  } catch (error) {
+    return errorResponse(error);
+  }
+
   const cached = await cache?.match(req).catch(() => null);
 
   if (cached) return cached;

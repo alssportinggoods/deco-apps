@@ -33,10 +33,10 @@ const ONEDOLLAR_STATIC_SCRIPT = Deno.env.get("ONEDOLLAR_STATIC_SCRIPT");
 // Deco Analytics, gated the same way its predecessor is, for the same reason: enabling a
 // collector is a fleet decision, not something to configure per site in the CMS.
 //
-// ON BY DEFAULT, like ONEDOLLAR_ENABLED: set "false" to turn it off. The collector drops
-// events from a host it has no registration for, so a site collects once it is registered.
+// als fork: opt-in, like ONEDOLLAR_ENABLED here (#735). Upstream turns it on by default,
+// which would inject a tracker outside the site's cookie-consent gates.
 const DECO_ANALYTICS_ENABLED =
-  Deno.env.get("DECO_ANALYTICS_ENABLED") !== "false";
+  Deno.env.get("DECO_ANALYTICS_ENABLED") === "true";
 // Empty means same-origin, which is the first-party path and the default we want. Set it
 // only for a site that is not behind our CDN.
 const DECO_ANALYTICS_ORIGIN = Deno.env.get("DECO_ANALYTICS_ORIGIN") ?? "";
